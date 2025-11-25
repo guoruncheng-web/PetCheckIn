@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import configuration from './config/configuration';
 import { DatabaseModule } from './modules/database/database.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -15,6 +16,7 @@ import { AppService } from './app.service';
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

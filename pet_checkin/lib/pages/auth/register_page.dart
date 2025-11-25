@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:pet_checkin/services/supabase_service.dart';
+import 'package:pet_checkin/services/api_service.dart';
 import 'package:pet_checkin/utils/toast.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -40,8 +40,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() => _loading = true);
     try {
-      await SupabaseService.instance.sendOtp(phone: phone);
-      Toast.success('验证码已发送');
+      final result = await ApiService().sendOtp(phone);
+      Toast.success(result['message'] ?? '验证码已发送');
+      // 开发环境显示验证码
+      if (result['code'] != null) {
+        Toast.success('验证码：${result['code']}');
+      }
       setState(() => _countdown = 60);
       _startCountdown();
     } catch (e) {
@@ -84,21 +88,17 @@ class _RegisterPageState extends State<RegisterPage> {
       Toast.error('请输入至少 6 位密码');
       return;
     }
-    if (!SupabaseService.instance.isConfigProvided) {
-      Toast.error('请配置 SUPABASE_URL 与 SUPABASE_ANON_KEY');
-      return;
-    }
-    final ok = await SupabaseService.instance.quickConnectivityCheck();
-    if (!ok) {
-      Toast.error('网络异常或证书问题，无法连接 Supabase');
-      return;
-    }
 
     setState(() => _loading = true);
     try {
       // 先验证验证码
-      final isNew = await SupabaseService.instance.verifyOtp(phone: phone, code: code);
-      if (!isNew) {
+      final verifyResult = await ApiService().verifyOtp(phone, code);
+      if (!verifyResult['success']) {
+        Toast.error('验证码验证失败');
+        return;
+      }
+
+      if (!verifyResult['isNewUser']) {
         Toast.error('手机号已注册，请直接登录');
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/login');
@@ -107,10 +107,15 @@ class _RegisterPageState extends State<RegisterPage> {
       }
 
       // 验证码通过后，注册账号
-      await SupabaseService.instance.signUpWithPhonePassword(phone: phone, password: pwd);
+      final registerResult = await ApiService().register(phone, pwd);
       if (!mounted) return;
-      Toast.success('注册成功');
-      Navigator.pushReplacementNamed(context, '/main');
+
+      if (registerResult['success']) {
+        Toast.success('注册成功');
+        Navigator.pushReplacementNamed(context, '/main');
+      } else {
+        Toast.error('注册失败');
+      }
     } catch (e) {
       Toast.error('注册失败：$e');
     } finally {
