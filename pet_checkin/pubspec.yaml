@@ -23,6 +23,7 @@ dependencies:
   # 网络 & 后端
   supabase_flutter: ^2.8.3     # Supabase 官方 SDK
   dio: ^5.8.0+1                # 备用网络层
+  alice: ^1.0.0-dev.12         # HTTP 网络调试工具
 
   # 本地存储
   shared_preferences: ^2.3.5

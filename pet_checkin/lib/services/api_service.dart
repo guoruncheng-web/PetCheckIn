@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:alice/alice.dart';
+import 'package:pet_checkin/main.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -10,9 +12,12 @@ class ApiService {
 
   late final Dio _dio;
   late final Logger _logger;
+  late final Alice _alice;
   String? _token;
 
   static const String _tokenKey = 'auth_token';
+
+  Alice get alice => _alice;
 
   Future<void> init() async {
     final baseUrl = const String.fromEnvironment(
@@ -31,6 +36,14 @@ class ApiService {
       ),
     );
 
+    // 初始化 Alice
+    _alice = Alice(
+      navigatorKey: navigatorKey,
+      showNotification: true,
+      showInspectorOnShake: true,
+      darkTheme: false,
+    );
+
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 10),
@@ -39,6 +52,9 @@ class ApiService {
         'Content-Type': 'application/json',
       },
     ));
+
+    // 添加 Alice 拦截器（必须在最前面）
+    _dio.interceptors.add(_alice.getDioInterceptor());
 
     // 添加请求拦截器
     _dio.interceptors.add(InterceptorsWrapper(

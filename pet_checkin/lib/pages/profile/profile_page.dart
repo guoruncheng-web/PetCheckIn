@@ -5,6 +5,7 @@ import 'package:pet_checkin/models/profile.dart';
 import 'package:pet_checkin/models/pet.dart';
 import 'package:pet_checkin/models/badge.dart' as pet_badge;
 import 'package:pet_checkin/services/supabase_service.dart';
+import 'package:pet_checkin/services/api_service.dart';
 import 'package:pet_checkin/utils/toast.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -394,6 +395,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildMenus() {
     final menus = [
+      {'icon': Icons.bug_report, 'title': '网络日志', 'route': 'network_inspector'},
       {'icon': Icons.settings, 'title': '账号设置', 'route': '/settings'},
       {'icon': Icons.lock, 'title': '隐私政策', 'route': '/privacy'},
       {'icon': Icons.help_outline, 'title': '帮助中心', 'route': '/help'},
@@ -422,10 +424,14 @@ class _ProfilePageState extends State<ProfilePage> {
               title: Text(m['title'] as String, style: TextStyle(fontSize: 14.sp)),
               trailing: Icon(Icons.chevron_right, size: 20.w, color: Colors.grey),
               onTap: () {
-                if (m['route'] == null) {
+                final route = m['route'];
+                if (route == null) {
                   _logout();
+                } else if (route == 'network_inspector') {
+                  // 打开 Alice 网络调试工具
+                  ApiService().alice.showInspector();
                 } else {
-                  Navigator.pushNamed(context, m['route'] as String);
+                  Navigator.pushNamed(context, route as String);
                 }
               },
             ),
