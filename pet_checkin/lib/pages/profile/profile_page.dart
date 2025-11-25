@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:image_picker/image_picker.dart';
 import 'package:pet_checkin/models/profile.dart';
 import 'package:pet_checkin/models/pet.dart';
 import 'package:pet_checkin/models/badge.dart' as pet_badge;
@@ -67,6 +68,62 @@ class _ProfilePageState extends State<ProfilePage> {
           Navigator.pushReplacementNamed(context, '/login');
         }
       }
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('拍照'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('从相册选择'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('取消'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      // TODO: 上传图片到服务器
+      // 1. 调用上传接口获取图片 URL
+      // 2. 调用更新个人信息接口
+      Toast.info('正在上传头像...');
+
+      // 模拟上传
+      await Future.delayed(const Duration(seconds: 1));
+
+      // 重新加载个人信息
+      await _loadProfile();
+      Toast.success('头像上传成功');
+    } catch (e) {
+      Toast.error('头像上传失败：$e');
     }
   }
 
@@ -141,24 +198,49 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         child: Row(
           children: [
-            ClipOval(
-              child: p.avatarUrl?.isNotEmpty == true
-                  ? Image.network(
-                      p.avatarUrl!,
-                      width: 64.w,
-                      height: 64.w,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: 64.w,
-                      height: 64.w,
-                      color: Colors.orange.shade200,
+            GestureDetector(
+              onTap: _pickAndUploadAvatar,
+              child: Stack(
+                children: [
+                  ClipOval(
+                    child: p.avatarUrl?.isNotEmpty == true
+                        ? Image.network(
+                            p.avatarUrl!,
+                            width: 64.w,
+                            height: 64.w,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: 64.w,
+                            height: 64.w,
+                            color: Colors.orange.shade200,
+                            child: Icon(
+                              Icons.person,
+                              size: 32.w,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 20.w,
+                      height: 20.w,
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
                       child: Icon(
-                        Icons.person,
-                        size: 32.w,
+                        Icons.camera_alt,
+                        size: 12.w,
                         color: Colors.white,
                       ),
                     ),
+                  ),
+                ],
+              ),
             ),
             SizedBox(width: 16.w),
             Expanded(
