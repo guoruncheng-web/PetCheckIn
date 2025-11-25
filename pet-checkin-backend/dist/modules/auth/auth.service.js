@@ -55,10 +55,7 @@ let AuthService = class AuthService {
         this.prisma = prisma;
         this.jwtService = jwtService;
     }
-    async sendOtp(phone) {
-        if (!phone || !phone.match(/^1[3-9]\d{9}$/)) {
-            throw new common_1.BadRequestException('手机号格式错误');
-        }
+    sendOtp(phone) {
         const code = '6666';
         const expiresAt = Date.now() + 5 * 60 * 1000;
         this.otpStore.set(phone, { code, expiresAt });

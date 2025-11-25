@@ -33,6 +33,27 @@ class PetCheckinApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       initialRoute: '/',
       onGenerateRoute: AppRoutes.onGenerateRoute,
+      builder: (context, child) {
+        // 添加 Alice 悬浮按钮（仅在 Debug 模式下显示）
+        return Stack(
+          children: [
+            child!,
+            if (const bool.fromEnvironment('dart.vm.product') == false)
+              Positioned(
+                bottom: 100,
+                right: 20,
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: Colors.blue.withOpacity(0.8),
+                  onPressed: () {
+                    ApiService().alice.showInspector();
+                  },
+                  child: const Icon(Icons.network_check, size: 20),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

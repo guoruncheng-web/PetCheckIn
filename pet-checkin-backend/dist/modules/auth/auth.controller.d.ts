@@ -2,13 +2,13 @@ import { AuthService } from './auth.service';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
-    sendOtp(phone: string): Promise<{
+    sendOtp(phone: string): {
         code: number;
         data: {
             code: string | undefined;
         };
         message: string;
-    }>;
+    };
     verifyOtp(phone: string, code: string): Promise<{
         code: number;
         data: {

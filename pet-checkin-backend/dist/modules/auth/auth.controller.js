@@ -15,12 +15,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
+const validate_params_decorator_1 = require("../../common/decorators/validate-params.decorator");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
-    async sendOtp(phone) {
+    sendOtp(phone) {
         return this.authService.sendOtp(phone);
     }
     async verifyOtp(phone, code) {
@@ -39,13 +40,20 @@ let AuthController = class AuthController {
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('send-otp'),
+    (0, validate_params_decorator_1.ValidateParams)([
+        { field: 'phone', required: true, ...validate_params_decorator_1.ValidationRules.phone },
+    ]),
     __param(0, (0, common_1.Body)('phone')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "sendOtp", null);
 __decorate([
     (0, common_1.Post)('verify-otp'),
+    (0, validate_params_decorator_1.ValidateParams)([
+        { field: 'phone', required: true, ...validate_params_decorator_1.ValidationRules.phone },
+        { field: 'code', required: true, ...validate_params_decorator_1.ValidationRules.otp },
+    ]),
     __param(0, (0, common_1.Body)('phone')),
     __param(1, (0, common_1.Body)('code')),
     __metadata("design:type", Function),
@@ -54,6 +62,10 @@ __decorate([
 ], AuthController.prototype, "verifyOtp", null);
 __decorate([
     (0, common_1.Post)('register'),
+    (0, validate_params_decorator_1.ValidateParams)([
+        { field: 'phone', required: true, ...validate_params_decorator_1.ValidationRules.phone },
+        { field: 'password', required: true, ...validate_params_decorator_1.ValidationRules.password },
+    ]),
     __param(0, (0, common_1.Body)('phone')),
     __param(1, (0, common_1.Body)('password')),
     __param(2, (0, common_1.Body)('nickname')),
@@ -63,6 +75,10 @@ __decorate([
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login'),
+    (0, validate_params_decorator_1.ValidateParams)([
+        { field: 'phone', required: true, ...validate_params_decorator_1.ValidationRules.phone },
+        { field: 'password', required: true },
+    ]),
     __param(0, (0, common_1.Body)('phone')),
     __param(1, (0, common_1.Body)('password')),
     __metadata("design:type", Function),
@@ -71,6 +87,10 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('reset-password'),
+    (0, validate_params_decorator_1.ValidateParams)([
+        { field: 'phone', required: true, ...validate_params_decorator_1.ValidationRules.phone },
+        { field: 'password', required: true, ...validate_params_decorator_1.ValidationRules.password },
+    ]),
     __param(0, (0, common_1.Body)('phone')),
     __param(1, (0, common_1.Body)('password')),
     __metadata("design:type", Function),

@@ -5,13 +5,13 @@ export declare class AuthService {
     private readonly jwtService;
     private otpStore;
     constructor(prisma: PrismaService, jwtService: JwtService);
-    sendOtp(phone: string): Promise<{
+    sendOtp(phone: string): {
         code: number;
         data: {
             code: string | undefined;
         };
         message: string;
-    }>;
+    };
     verifyOtp(phone: string, code: string): Promise<{
         code: number;
         data: {

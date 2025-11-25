@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../database/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -13,11 +17,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async sendOtp(phone: string) {
-    if (!phone || !phone.match(/^1[3-9]\d{9}$/)) {
-      throw new BadRequestException('手机号格式错误');
-    }
-
+  sendOtp(phone: string) {
     // 固定验证码 6666（开发环境）
     const code = '6666';
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5分钟过期
