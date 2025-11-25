@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pet_checkin/ui/pages/splash_page.dart';
 import 'package:pet_checkin/pages/auth/login_page.dart';
 import 'package:pet_checkin/pages/auth/register_page.dart';
+import 'package:pet_checkin/pages/auth/forgot_password_page.dart';
 import 'package:pet_checkin/pages/main_page.dart';
 import 'package:pet_checkin/pages/home/home_page.dart';
 import 'package:pet_checkin/pages/square/square_page.dart';
@@ -11,6 +12,7 @@ class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
   static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
   static const String main = '/main';
   static const String home = '/home';
   static const String square = '/square';
@@ -25,6 +27,8 @@ class AppRoutes {
       case register:
         final phone = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => RegisterPage(phone: phone));
+      case forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
       case main:
         return MaterialPageRoute(builder: (_) => const MainPage());
       case home:

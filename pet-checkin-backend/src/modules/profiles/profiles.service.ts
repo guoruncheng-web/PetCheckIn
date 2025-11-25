@@ -6,7 +6,7 @@ export class ProfilesService {
   constructor(private prisma: PrismaService) {}
 
   async getProfile(userId: string) {
-    const profile = await this.prisma.profile.findUnique({
+    let profile = await this.prisma.profile.findUnique({
       where: { userId },
       include: {
         user: {
@@ -17,8 +17,29 @@ export class ProfilesService {
       },
     });
 
+    // 如果用户没有资料，创建默认资料
     if (!profile) {
-      return null;
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { phone: true },
+      });
+
+      if (!user) {
+        return null;
+      }
+
+      const defaultNickname = `宠友${user.phone.slice(-4)}`;
+      const newProfile = await this.prisma.profile.create({
+        data: {
+          userId,
+          nickname: defaultNickname,
+        },
+      });
+
+      profile = {
+        ...newProfile,
+        user,
+      };
     }
 
     // 获取用户统计数据

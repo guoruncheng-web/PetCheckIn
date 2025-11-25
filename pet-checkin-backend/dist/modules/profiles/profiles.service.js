@@ -18,7 +18,7 @@ let ProfilesService = class ProfilesService {
         this.prisma = prisma;
     }
     async getProfile(userId) {
-        const profile = await this.prisma.profile.findUnique({
+        let profile = await this.prisma.profile.findUnique({
             where: { userId },
             include: {
                 user: {
@@ -29,7 +29,24 @@ let ProfilesService = class ProfilesService {
             },
         });
         if (!profile) {
-            return null;
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                select: { phone: true },
+            });
+            if (!user) {
+                return null;
+            }
+            const defaultNickname = `宠友${user.phone.slice(-4)}`;
+            const newProfile = await this.prisma.profile.create({
+                data: {
+                    userId,
+                    nickname: defaultNickname,
+                },
+            });
+            profile = {
+                ...newProfile,
+                user,
+            };
         }
         const [petsCount, checkinsCount] = await Promise.all([
             this.prisma.pet.count({ where: { userId } }),

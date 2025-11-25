@@ -278,8 +278,25 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                               ),
                             ),
                           ),
-                          SizedBox(height: 32.h),
-                          
+                          SizedBox(height: 16.h),
+
+                          // Forgot Password Link
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                              child: Text(
+                                '忘记密码？',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: const Color(0xFFF59E0B),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 16.h),
+
                           // Login Button
                           Container(
                             width: double.infinity,

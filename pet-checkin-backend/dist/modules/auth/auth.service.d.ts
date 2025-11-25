@@ -41,5 +41,10 @@ export declare class AuthService {
         };
         message: string;
     }>;
+    resetPassword(phone: string, password: string): Promise<{
+        code: number;
+        data: null;
+        message: string;
+    }>;
     private cleanExpiredOtp;
 }

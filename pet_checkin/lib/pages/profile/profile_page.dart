@@ -60,7 +60,12 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        Toast.error('加载个人信息失败：$e');
+        // Token 无效或服务器错误，清除 Token 并跳转到登录页
+        await ApiService().clearToken();
+        Toast.error('登录已失效，请重新登录');
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
       }
     }
   }

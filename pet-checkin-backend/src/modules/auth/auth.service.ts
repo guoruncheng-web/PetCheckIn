@@ -120,6 +120,7 @@ export class AuthService {
   async login(phone: string, password: string) {
     const user = await this.prisma.user.findUnique({
       where: { phone },
+      include: { profile: true },
     });
 
     if (!user || !user.password) {
@@ -129,6 +130,17 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('手机号或密码错误');
+    }
+
+    // 如果用户没有资料，创建默认资料
+    if (!user.profile) {
+      const defaultNickname = `宠友${phone.slice(-4)}`;
+      await this.prisma.profile.create({
+        data: {
+          userId: user.id,
+          nickname: defaultNickname,
+        },
+      });
     }
 
     // 生成 JWT Token
@@ -147,6 +159,30 @@ export class AuthService {
         },
       },
       message: '登录成功',
+    };
+  }
+
+  async resetPassword(phone: string, password: string) {
+    // 检查用户是否存在
+    const user = await this.prisma.user.findUnique({
+      where: { phone },
+    });
+
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+
+    // 更新密码
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await this.prisma.user.update({
+      where: { phone },
+      data: { password: hashedPassword },
+    });
+
+    return {
+      code: 200,
+      data: null,
+      message: '密码重置成功',
     };
   }
 

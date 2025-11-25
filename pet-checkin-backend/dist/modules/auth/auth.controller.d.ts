@@ -38,4 +38,9 @@ export declare class AuthController {
         };
         message: string;
     }>;
+    resetPassword(phone: string, password: string): Promise<{
+        code: number;
+        data: null;
+        message: string;
+    }>;
 }

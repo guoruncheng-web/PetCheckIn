@@ -31,4 +31,12 @@ export class AuthController {
   async login(@Body('phone') phone: string, @Body('password') password: string) {
     return this.authService.login(phone, password);
   }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('phone') phone: string,
+    @Body('password') password: string,
+  ) {
+    return this.authService.resetPassword(phone, password);
+  }
 }

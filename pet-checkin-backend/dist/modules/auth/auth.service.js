@@ -135,6 +135,7 @@ let AuthService = class AuthService {
     async login(phone, password) {
         const user = await this.prisma.user.findUnique({
             where: { phone },
+            include: { profile: true },
         });
         if (!user || !user.password) {
             throw new common_1.UnauthorizedException('手机号或密码错误');
@@ -142,6 +143,15 @@ let AuthService = class AuthService {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('手机号或密码错误');
+        }
+        if (!user.profile) {
+            const defaultNickname = `宠友${phone.slice(-4)}`;
+            await this.prisma.profile.create({
+                data: {
+                    userId: user.id,
+                    nickname: defaultNickname,
+                },
+            });
         }
         const token = this.jwtService.sign({
             sub: user.id,
@@ -157,6 +167,24 @@ let AuthService = class AuthService {
                 },
             },
             message: '登录成功',
+        };
+    }
+    async resetPassword(phone, password) {
+        const user = await this.prisma.user.findUnique({
+            where: { phone },
+        });
+        if (!user) {
+            throw new common_1.BadRequestException('用户不存在');
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await this.prisma.user.update({
+            where: { phone },
+            data: { password: hashedPassword },
+        });
+        return {
+            code: 200,
+            data: null,
+            message: '密码重置成功',
         };
     }
     cleanExpiredOtp() {

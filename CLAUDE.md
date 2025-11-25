@@ -337,3 +337,5 @@ npm run test:e2e                     # E2E 测试
 npm run build
 npm run start:prod
 ```
+
+# 一般你不用重启服务,因为我让你开发或者修改功能的时候我服务是启动好的
