@@ -28,10 +28,12 @@ export class AuthService {
     this.cleanExpiredOtp();
 
     return {
-      success: true,
+      code: 200,
+      data: {
+        // 开发环境返回验证码，生产环境删除此行
+        code: process.env.NODE_ENV === 'development' ? code : undefined,
+      },
       message: '验证码已发送',
-      // 开发环境返回验证码，生产环境删除此行
-      code: process.env.NODE_ENV === 'development' ? code : undefined,
     };
   }
 
@@ -60,8 +62,11 @@ export class AuthService {
     });
 
     return {
-      success: true,
-      isNewUser: !user,
+      code: 200,
+      data: {
+        isNewUser: !user,
+      },
+      message: '验证成功',
     };
   }
 
@@ -100,12 +105,15 @@ export class AuthService {
     });
 
     return {
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        phone: user.phone,
+      code: 200,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          phone: user.phone,
+        },
       },
+      message: '注册成功',
     };
   }
 
@@ -130,12 +138,15 @@ export class AuthService {
     });
 
     return {
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        phone: user.phone,
+      code: 200,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          phone: user.phone,
+        },
       },
+      message: '登录成功',
     };
   }
 

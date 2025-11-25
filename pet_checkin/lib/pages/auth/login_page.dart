@@ -45,10 +45,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     try {
       final result = await ApiService().login(phone, pwd);
       if (!mounted) return;
-      if (result['success']) {
+      if (result['code'] == 200) {
+        Toast.success(result['message'] ?? '登录成功');
         Navigator.pushReplacementNamed(context, '/main');
       } else {
-        Toast.error('登录失败');
+        Toast.error(result['message'] ?? '登录失败');
       }
     } catch (e) {
       Toast.error('登录失败：$e');

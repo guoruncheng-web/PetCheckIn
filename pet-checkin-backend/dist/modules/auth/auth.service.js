@@ -64,9 +64,11 @@ let AuthService = class AuthService {
         this.otpStore.set(phone, { code, expiresAt });
         this.cleanExpiredOtp();
         return {
-            success: true,
+            code: 200,
+            data: {
+                code: process.env.NODE_ENV === 'development' ? code : undefined,
+            },
             message: '验证码已发送',
-            code: process.env.NODE_ENV === 'development' ? code : undefined,
         };
     }
     async verifyOtp(phone, code) {
@@ -86,8 +88,11 @@ let AuthService = class AuthService {
             where: { phone },
         });
         return {
-            success: true,
-            isNewUser: !user,
+            code: 200,
+            data: {
+                isNewUser: !user,
+            },
+            message: '验证成功',
         };
     }
     async register(phone, password, nickname) {
@@ -116,12 +121,15 @@ let AuthService = class AuthService {
             phone: user.phone,
         });
         return {
-            success: true,
-            token,
-            user: {
-                id: user.id,
-                phone: user.phone,
+            code: 200,
+            data: {
+                token,
+                user: {
+                    id: user.id,
+                    phone: user.phone,
+                },
             },
+            message: '注册成功',
         };
     }
     async login(phone, password) {
@@ -140,12 +148,15 @@ let AuthService = class AuthService {
             phone: user.phone,
         });
         return {
-            success: true,
-            token,
-            user: {
-                id: user.id,
-                phone: user.phone,
+            code: 200,
+            data: {
+                token,
+                user: {
+                    id: user.id,
+                    phone: user.phone,
+                },
             },
+            message: '登录成功',
         };
     }
     cleanExpiredOtp() {

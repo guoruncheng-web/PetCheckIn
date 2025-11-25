@@ -43,8 +43,8 @@ class _RegisterPageState extends State<RegisterPage> {
       final result = await ApiService().sendOtp(phone);
       Toast.success(result['message'] ?? '验证码已发送');
       // 开发环境显示验证码
-      if (result['code'] != null) {
-        Toast.success('验证码：${result['code']}');
+      if (result['data']?['code'] != null) {
+        Toast.success('验证码：${result['data']['code']}');
       }
       setState(() => _countdown = 60);
       _startCountdown();
@@ -93,12 +93,12 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       // 先验证验证码
       final verifyResult = await ApiService().verifyOtp(phone, code);
-      if (!verifyResult['success']) {
-        Toast.error('验证码验证失败');
+      if (verifyResult['code'] != 200) {
+        Toast.error(verifyResult['message'] ?? '验证码验证失败');
         return;
       }
 
-      if (!verifyResult['isNewUser']) {
+      if (!(verifyResult['data']?['isNewUser'] ?? false)) {
         Toast.error('手机号已注册，请直接登录');
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/login');
@@ -110,11 +110,11 @@ class _RegisterPageState extends State<RegisterPage> {
       final registerResult = await ApiService().register(phone, pwd);
       if (!mounted) return;
 
-      if (registerResult['success']) {
-        Toast.success('注册成功');
+      if (registerResult['code'] == 200) {
+        Toast.success(registerResult['message'] ?? '注册成功');
         Navigator.pushReplacementNamed(context, '/main');
       } else {
-        Toast.error('注册失败');
+        Toast.error(registerResult['message'] ?? '注册失败');
       }
     } catch (e) {
       Toast.error('注册失败：$e');

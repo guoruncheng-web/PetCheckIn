@@ -124,8 +124,8 @@ class ApiService {
     });
 
     // 保存 token
-    if (response.data['token'] != null) {
-      await saveToken(response.data['token']);
+    if (response.data['data']?['token'] != null) {
+      await saveToken(response.data['data']['token']);
     }
 
     return response.data;
@@ -138,8 +138,8 @@ class ApiService {
     });
 
     // 保存 token
-    if (response.data['token'] != null) {
-      await saveToken(response.data['token']);
+    if (response.data['data']?['token'] != null) {
+      await saveToken(response.data['data']['token']);
     }
 
     return response.data;

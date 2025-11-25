@@ -6,29 +6,40 @@ export declare class AuthService {
     private otpStore;
     constructor(prisma: PrismaService, jwtService: JwtService);
     sendOtp(phone: string): Promise<{
-        success: boolean;
+        code: number;
+        data: {
+            code: string | undefined;
+        };
         message: string;
-        code: string | undefined;
     }>;
     verifyOtp(phone: string, code: string): Promise<{
-        success: boolean;
-        isNewUser: boolean;
+        code: number;
+        data: {
+            isNewUser: boolean;
+        };
+        message: string;
     }>;
     register(phone: string, password: string, nickname?: string): Promise<{
-        success: boolean;
-        token: string;
-        user: {
-            id: string;
-            phone: string;
+        code: number;
+        data: {
+            token: string;
+            user: {
+                id: string;
+                phone: string;
+            };
         };
+        message: string;
     }>;
     login(phone: string, password: string): Promise<{
-        success: boolean;
-        token: string;
-        user: {
-            id: string;
-            phone: string;
+        code: number;
+        data: {
+            token: string;
+            user: {
+                id: string;
+                phone: string;
+            };
         };
+        message: string;
     }>;
     private cleanExpiredOtp;
 }
