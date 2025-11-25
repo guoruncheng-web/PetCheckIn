@@ -1,0 +1,40 @@
+import 'package:flutter/material.dart';
+import 'package:pet_checkin/ui/pages/splash_page.dart';
+import 'package:pet_checkin/pages/auth/login_page.dart';
+import 'package:pet_checkin/pages/auth/register_page.dart';
+import 'package:pet_checkin/pages/main_page.dart';
+import 'package:pet_checkin/pages/home/home_page.dart';
+import 'package:pet_checkin/pages/square/square_page.dart';
+import 'package:pet_checkin/pages/profile/profile_page.dart';
+
+class AppRoutes {
+  static const String splash = '/';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String main = '/main';
+  static const String home = '/home';
+  static const String square = '/square';
+  static const String profile = '/profile';
+
+  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case splash:
+        return MaterialPageRoute(builder: (_) => const SplashPage());
+      case login:
+        return MaterialPageRoute(builder: (_) => const LoginPage());
+      case register:
+        final phone = settings.arguments as String?;
+        return MaterialPageRoute(builder: (_) => RegisterPage(phone: phone));
+      case main:
+        return MaterialPageRoute(builder: (_) => const MainPage());
+      case home:
+        return MaterialPageRoute(builder: (_) => const HomePage());
+      case square:
+        return MaterialPageRoute(builder: (_) => const SquarePage());
+      case profile:
+        return MaterialPageRoute(builder: (_) => const ProfilePage());
+      default:
+        return MaterialPageRoute(builder: (_) => const SplashPage());
+    }
+  }
+}

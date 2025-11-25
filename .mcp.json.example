@@ -1,0 +1,54 @@
+{
+  "mcpServers": {
+    "figma": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "figma-mcp"
+      ],
+      "env": {
+        "FIGMA_API_KEY": "your_figma_api_key_here"
+      }
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "<personal-access-token>"
+      ]
+    },
+    "ssh": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-ssh"
+      ],
+      "env": {
+        "SSH_HOST": "your_host",
+        "SSH_PORT": "22",
+        "SSH_USER": "your_user",
+        "SSH_PASSWORD": "your_password"
+      },
+      "postgres": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-postgres",
+          "postgresql://user:password@host:5432/database"
+        ]
+      },
+      "github": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-github"
+        ],
+        "env": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
+        }
+      }
+    }
+  }
+}

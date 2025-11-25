@@ -1,0 +1,83 @@
+name: pet_checkin
+description: 宠物日常打卡应用（Flutter + Supabase）
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI & 动画
+  cupertino_icons: ^1.0.8
+  flutter_svg: ^2.0.17         # SVG 图标
+  animations: ^2.0.8           # 官方动画库
+  flutter_staggered_grid_view: ^0.7.0 # 瀑布流（广场页）
+
+  # 状态管理
+  provider: ^6.1.2
+  flutter_riverpod: ^2.6.1     # 可选，后续如需 Riverpod 可切
+
+  # 网络 & 后端
+  supabase_flutter: ^2.8.3     # Supabase 官方 SDK
+  dio: ^5.8.0+1                # 备用网络层
+
+  # 本地存储
+  shared_preferences: ^2.3.5
+  path_provider: ^2.1.5
+
+  # 图片/文件
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+  flutter_image_compress: ^2.3.0
+
+  # 工具
+  json_annotation: ^4.9.0
+  intl: ^0.19.0                # 格式化
+  uuid: ^4.5.1                   # 生成 UUID
+  equatable: ^2.0.7              # 值相等辅助
+  logger: ^2.5.0                 # 日志
+
+  # 权限
+  permission_handler: ^11.3.1
+
+  # 地理定位（广场同城用）
+  geolocator: ^13.0.2
+  geocoding: ^2.2.2
+
+  # UI 增强
+  flutter_screenutil: ^5.9.3          # 屏幕适配
+  pull_to_refresh: ^2.0.0               # 下拉刷新
+  flutter_slidable: ^3.1.1              # 侧滑动作
+  badges: ^3.1.2                        # 小红点
+  salomon_bottom_bar: ^3.3.2           # 底部导航
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.14
+  json_serializable: ^6.9.0
+  riverpod_generator: ^2.6.3   # 如用 Riverpod 代码生成
+
+flutter:
+  uses-material-design: true
+
+  # 本地资源（后续逐步放入）
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/jsons/
+
+  # 字体文件后续放入再打开
+  # fonts:
+  #   - family: PingFang
+  #     fonts:
+  #       - asset: fonts/PingFang-Regular.ttf
+  #         weight: 400
+  #       - asset: fonts/PingFang-Medium.ttf
+  #         weight: 500
+  #       - asset: fonts/PingFang-Semibold.ttf
+  #         weight: 600
