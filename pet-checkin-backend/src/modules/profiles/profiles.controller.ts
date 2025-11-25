@@ -1,4 +1,12 @@
-import { Controller, Get, Put, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Body,
+  UseGuards,
+  Request,
+  Logger,
+} from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -12,13 +20,19 @@ interface AuthRequest extends Request {
 @Controller('profiles')
 @UseGuards(JwtAuthGuard)
 export class ProfilesController {
+  private readonly logger = new Logger(ProfilesController.name);
+
   constructor(private readonly profilesService: ProfilesService) {}
 
   @Get('me')
   async getMyProfile(@Request() req: AuthRequest) {
+    this.logger.log('🔍 GET /profiles/me called');
+    this.logger.debug(`User: ${JSON.stringify(req.user)}`);
+
     const userId = req.user.userId;
     const profile = await this.profilesService.getProfile(userId);
 
+    this.logger.log(`Profile found: ${!!profile}`);
     if (!profile) {
       return {
         code: 404,

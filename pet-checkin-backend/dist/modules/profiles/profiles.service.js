@@ -48,17 +48,17 @@ let ProfilesService = class ProfilesService {
                 user,
             };
         }
-        const [petsCount, checkinsCount] = await Promise.all([
+        const [petsCount, checkinsCount, totalLikes] = await Promise.all([
             this.prisma.pet.count({ where: { userId } }),
             this.prisma.checkIn.count({ where: { userId } }),
-        ]);
-        const totalLikes = await this.prisma.like.count({
-            where: {
-                checkIn: {
-                    userId,
+            this.prisma.like.count({
+                where: {
+                    checkIn: {
+                        userId,
+                    },
                 },
-            },
-        });
+            }),
+        ]);
         return {
             id: profile.id,
             userId: profile.userId,

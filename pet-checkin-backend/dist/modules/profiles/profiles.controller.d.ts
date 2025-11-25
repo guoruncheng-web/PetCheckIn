@@ -7,6 +7,7 @@ interface AuthRequest extends Request {
 }
 export declare class ProfilesController {
     private readonly profilesService;
+    private readonly logger;
     constructor(profilesService: ProfilesService);
     getMyProfile(req: AuthRequest): Promise<{
         code: number;
@@ -46,14 +47,14 @@ export declare class ProfilesController {
         message: string;
         data: {
             id: string;
-            userId: string;
+            createdAt: Date;
+            updatedAt: Date;
             nickname: string;
             avatarUrl: string | null;
             bio: string | null;
             cityCode: string | null;
             cityName: string | null;
-            createdAt: Date;
-            updatedAt: Date;
+            userId: string;
         };
     }>;
 }

@@ -107,7 +107,9 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: SizedBox(height: 32.h)),
+          SliverToBoxAdapter(
+            child: SizedBox(height: MediaQuery.of(context).padding.top + 16.h),
+          ),
           _buildHeader(p),
           SliverToBoxAdapter(child: SizedBox(height: 24.h)),
           _buildAchievements(),

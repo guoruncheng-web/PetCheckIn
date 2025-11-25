@@ -43,19 +43,18 @@ export class ProfilesService {
     }
 
     // 获取用户统计数据
-    const [petsCount, checkinsCount] = await Promise.all([
+    const [petsCount, checkinsCount, totalLikes] = await Promise.all([
       this.prisma.pet.count({ where: { userId } }),
       this.prisma.checkIn.count({ where: { userId } }),
-    ]);
-
-    // 获取总获赞数（所有打卡的点赞数之和）
-    const totalLikes = await this.prisma.like.count({
-      where: {
-        checkIn: {
-          userId,
+      // 获取总获赞数（所有打卡的点赞数之和）
+      this.prisma.like.count({
+        where: {
+          checkIn: {
+            userId,
+          },
         },
-      },
-    });
+      }),
+    ]);
 
     return {
       id: profile.id,

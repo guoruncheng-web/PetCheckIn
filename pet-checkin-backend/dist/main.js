@@ -7,10 +7,19 @@ const app_module_1 = require("./app.module");
 const http_exception_filter_1 = require("./common/filters/http-exception.filter");
 const transform_interceptor_1 = require("./common/interceptors/transform.interceptor");
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, {
+        logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    });
     const configService = app.get(config_1.ConfigService);
     const port = configService.get('port');
     const apiPrefix = configService.get('apiPrefix');
+    const logger = new common_1.Logger('HTTP');
+    app.use((req, res, next) => {
+        const { method, originalUrl, headers } = req;
+        logger.log(`📨 ${method} ${originalUrl}`);
+        logger.debug(`Headers: ${JSON.stringify(headers.authorization ? { authorization: headers.authorization } : {})}`);
+        next();
+    });
     app.setGlobalPrefix(apiPrefix);
     app.enableCors();
     app.useGlobalPipes(new common_1.ValidationPipe({

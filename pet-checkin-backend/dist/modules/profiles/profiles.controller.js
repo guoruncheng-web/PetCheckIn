@@ -11,19 +11,24 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var ProfilesController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProfilesController = void 0;
 const common_1 = require("@nestjs/common");
 const profiles_service_1 = require("./profiles.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
-let ProfilesController = class ProfilesController {
+let ProfilesController = ProfilesController_1 = class ProfilesController {
     profilesService;
+    logger = new common_1.Logger(ProfilesController_1.name);
     constructor(profilesService) {
         this.profilesService = profilesService;
     }
     async getMyProfile(req) {
+        this.logger.log('🔍 GET /profiles/me called');
+        this.logger.debug(`User: ${JSON.stringify(req.user)}`);
         const userId = req.user.userId;
         const profile = await this.profilesService.getProfile(userId);
+        this.logger.log(`Profile found: ${!!profile}`);
         if (!profile) {
             return {
                 code: 404,
@@ -63,7 +68,7 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ProfilesController.prototype, "updateMyProfile", null);
-exports.ProfilesController = ProfilesController = __decorate([
+exports.ProfilesController = ProfilesController = ProfilesController_1 = __decorate([
     (0, common_1.Controller)('profiles'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [profiles_service_1.ProfilesService])

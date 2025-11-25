@@ -1,16 +1,27 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+  });
 
   const configService = app.get(ConfigService);
   const port = configService.get('port');
   const apiPrefix = configService.get('apiPrefix');
+  const logger = new Logger('HTTP');
+
+  // 请求日志中间件
+  app.use((req, res, next) => {
+    const { method, originalUrl, headers } = req;
+    logger.log(`📨 ${method} ${originalUrl}`);
+    logger.debug(`Headers: ${JSON.stringify(headers.authorization ? { authorization: headers.authorization } : {})}`);
+    next();
+  });
 
   // 设置全局前缀
   app.setGlobalPrefix(apiPrefix);
