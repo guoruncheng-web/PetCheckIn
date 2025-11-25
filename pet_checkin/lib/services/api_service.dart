@@ -170,6 +170,29 @@ class ApiService {
     await clearToken();
   }
 
+  // Profile APIs
+  Future<Map<String, dynamic>> getMyProfile() async {
+    final response = await _dio.get('/profiles/me');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> updateMyProfile({
+    String? nickname,
+    String? avatarUrl,
+    String? bio,
+    String? cityCode,
+    String? cityName,
+  }) async {
+    final response = await _dio.put('/profiles/me', data: {
+      if (nickname != null) 'nickname': nickname,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      if (bio != null) 'bio': bio,
+      if (cityCode != null) 'cityCode': cityCode,
+      if (cityName != null) 'cityName': cityName,
+    });
+    return response.data;
+  }
+
   // 通用请求方法
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) {
     return _dio.get(path, queryParameters: queryParameters);

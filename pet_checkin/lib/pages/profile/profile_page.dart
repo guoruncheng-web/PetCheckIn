@@ -27,11 +27,41 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadProfile() async {
-    // TODO: 迁移到 NestJS API
-    if (mounted) {
-      setState(() {
-        _loading = false;
-      });
+    try {
+      final result = await ApiService().getMyProfile();
+      if (!mounted) return;
+
+      if (result['code'] == 200 && result['data'] != null) {
+        final data = result['data'];
+        setState(() {
+          _profile = Profile(
+            id: data['id'],
+            userId: data['userId'],
+            nickname: data['nickname'],
+            avatarUrl: data['avatarUrl'],
+            bio: data['bio'],
+            phone: data['phone'],
+            cityCode: data['cityCode'],
+            cityName: data['cityName'],
+            province: data['province'],
+            isVerified: data['isVerified'] ?? false,
+            followingCount: data['followingCount'] ?? 0,
+            followerCount: data['followerCount'] ?? 0,
+            totalLikes: data['totalLikes'] ?? 0,
+            createdAt: DateTime.parse(data['createdAt']),
+            updatedAt: DateTime.parse(data['updatedAt']),
+          );
+          _loading = false;
+        });
+      } else {
+        setState(() => _loading = false);
+        Toast.error(result['message'] ?? '加载个人信息失败');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        Toast.error('加载个人信息失败：$e');
+      }
     }
   }
 

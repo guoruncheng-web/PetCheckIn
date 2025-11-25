@@ -18,6 +18,7 @@ const database_module_1 = require("./modules/database/database.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
+const profiles_module_1 = require("./modules/profiles/profiles.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -32,6 +33,7 @@ exports.AppModule = AppModule = __decorate([
             schedule_1.ScheduleModule.forRoot(),
             database_module_1.DatabaseModule,
             auth_module_1.AuthModule,
+            profiles_module_1.ProfilesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
