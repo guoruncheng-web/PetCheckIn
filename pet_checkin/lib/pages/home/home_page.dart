@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:pet_checkin/models/pet.dart';
 import 'package:pet_checkin/models/checkin.dart';
-import 'package:pet_checkin/services/supabase_service.dart';
 import 'package:pet_checkin/utils/toast.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,7 +16,6 @@ class _HomePageState extends State<HomePage> {
   List<Pet> _pets = [];
   List<CheckIn> _todayCheckIns = [];
   bool _loading = true;
-  int _currentPetIndex = 0;
 
   @override
   void initState() {

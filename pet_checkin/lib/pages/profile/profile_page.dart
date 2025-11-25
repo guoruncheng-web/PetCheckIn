@@ -4,7 +4,6 @@ import 'package:badges/badges.dart' as badges;
 import 'package:pet_checkin/models/profile.dart';
 import 'package:pet_checkin/models/pet.dart';
 import 'package:pet_checkin/models/badge.dart' as pet_badge;
-import 'package:pet_checkin/services/supabase_service.dart';
 import 'package:pet_checkin/services/api_service.dart';
 import 'package:pet_checkin/utils/toast.dart';
 

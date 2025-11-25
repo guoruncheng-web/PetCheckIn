@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:pet_checkin/models/checkin.dart';
-import 'package:pet_checkin/services/supabase_service.dart';
 import 'package:pet_checkin/utils/toast.dart';
 
 class SquarePage extends StatefulWidget {
@@ -15,9 +14,8 @@ class SquarePage extends StatefulWidget {
 
 class _SquarePageState extends State<SquarePage> {
   final RefreshController _refreshController = RefreshController();
-  List<CheckIn> _checkIns = [];
+  final List<CheckIn> _checkIns = [];
   bool _loading = true;
-  String? _selectedCity;
 
   @override
   void initState() {
@@ -27,10 +25,9 @@ class _SquarePageState extends State<SquarePage> {
 
   Future<void> _loadCheckIns({bool refresh = false}) async {
     try {
-      final data = []; // TODO: 迁移到 NestJS API
+      // TODO: 迁移到 NestJS API
       if (mounted) {
         setState(() {
-          _checkIns = data;
           _loading = false;
         });
         if (refresh) _refreshController.refreshCompleted();
@@ -89,10 +86,8 @@ class _SquarePageState extends State<SquarePage> {
                       if (text.isEmpty) return;
                       Navigator.pop(context);
                       try {
-                        // TODO: 迁移到 NestJS API // await SupabaseService.instance.createComment(
-                          checkInId: ci.id,
-                          content: text,
-                        );
+                        // TODO: 迁移到 NestJS API
+                        // await ApiService().createComment(ci.id, text);
                         Toast.success('评论成功');
                         await _loadCheckIns();
                       } catch (e) {
@@ -130,7 +125,6 @@ class _SquarePageState extends State<SquarePage> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.location_on_outlined),
             onSelected: (v) {
-              setState(() => _selectedCity = v == '全部' ? null : v);
               _loadCheckIns();
             },
             itemBuilder: (_) => [

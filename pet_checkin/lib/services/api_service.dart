@@ -1,9 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:alice/alice.dart';
-import 'package:pet_checkin/main.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -37,12 +35,7 @@ class ApiService {
     );
 
     // 初始化 Alice
-    _alice = Alice(
-      navigatorKey: navigatorKey,
-      showNotification: true,
-      showInspectorOnShake: true,
-      darkTheme: false,
-    );
+    _alice = Alice();
 
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
