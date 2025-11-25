@@ -2,6 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:alice/alice.dart';
+import 'package:alice/model/alice_configuration.dart';
+import 'package:alice_dio/alice_dio_adapter.dart';
+import 'package:pet_checkin/main.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -35,7 +38,14 @@ class ApiService {
     );
 
     // 初始化 Alice
-    _alice = Alice();
+    _alice = Alice(
+      configuration: AliceConfiguration(
+        navigatorKey: navigatorKey,
+        showNotification: true,
+        showInspectorOnShake: true,
+        showShareButton: true,
+      ),
+    );
 
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
@@ -46,8 +56,10 @@ class ApiService {
       },
     ));
 
-    // 添加 Alice 拦截器（必须在最前面）
-    _dio.interceptors.add(_alice.getDioInterceptor());
+    // 添加 Alice Dio 适配器（必须在最前面）
+    final aliceDioAdapter = AliceDioAdapter();
+    _alice.addAdapter(aliceDioAdapter);
+    _dio.interceptors.add(aliceDioAdapter);
 
     // 添加请求拦截器
     _dio.interceptors.add(InterceptorsWrapper(

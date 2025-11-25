@@ -54,6 +54,7 @@ dependencies:
   flutter_slidable: ^3.1.1              # 侧滑动作
   badges: ^3.1.2                        # 小红点
   salomon_bottom_bar: ^3.3.2           # 底部导航
+  alice_dio: ^1.0.6
 
 dev_dependencies:
   flutter_test:

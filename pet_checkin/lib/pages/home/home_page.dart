@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
         height: 180.h,
         child: PageView.builder(
           itemCount: _pets.length,
-          onPageChanged: (i) => setState(() => _currentPetIndex = i),
+          onPageChanged: (i) => setState(() {}),
           padEnds: false,
           controller: PageController(viewportFraction: 0.78, initialPage: 0),
           itemBuilder: (ctx, i) {
