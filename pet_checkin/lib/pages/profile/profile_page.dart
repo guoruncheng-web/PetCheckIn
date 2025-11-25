@@ -27,23 +27,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadProfile() async {
-    try {
-      final userId = SupabaseService.instance.currentUserId;
-      if (userId == null) return;
-      final profile = await SupabaseService.instance.getProfile(userId);
-      final pets = await SupabaseService.instance.listMyPets(userId);
-      final badges = await SupabaseService.instance.listMyBadges(userId);
-      if (mounted) {
-        setState(() {
-          _profile = profile;
-          _pets = pets;
-          _badges = badges;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      Toast.error('加载失败：$e');
-      if (mounted) setState(() => _loading = false);
+    // TODO: 迁移到 NestJS API
+    if (mounted) {
+      setState(() {
+        _loading = false;
+      });
     }
   }
 
@@ -64,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     if (ok != true) return;
     try {
-      await SupabaseService.instance.signOut();
+      // TODO: 迁移到 NestJS API - 调用 ApiService().logout()
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     } catch (e) {

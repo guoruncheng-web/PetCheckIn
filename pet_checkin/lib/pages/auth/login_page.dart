@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:pet_checkin/services/supabase_service.dart';
+import 'package:pet_checkin/services/api_service.dart';
 import 'package:pet_checkin/utils/toast.dart';
 
 class LoginPage extends StatefulWidget {
@@ -43,9 +43,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     }
     setState(() => _loading = true);
     try {
-      await SupabaseService.instance.signInWithPhonePassword(phone: phone, password: pwd);
+      final result = await ApiService().login(phone, pwd);
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/main');
+      if (result['success']) {
+        Navigator.pushReplacementNamed(context, '/main');
+      } else {
+        Toast.error('登录失败');
+      }
     } catch (e) {
       Toast.error('登录失败：$e');
     } finally {

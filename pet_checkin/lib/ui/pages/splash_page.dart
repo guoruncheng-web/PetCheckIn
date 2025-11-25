@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pet_checkin/services/supabase_service.dart';
+import 'package:pet_checkin/services/api_service.dart';
 
 /// 启动页（2 秒后跳转登录/首页）
 class SplashPage extends StatefulWidget {
@@ -19,8 +19,8 @@ class _SplashPageState extends State<SplashPage> {
   Future<void> _navigate() async {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    // 简单判断：有登录 session 就去主页，否则去登录页
-    final loggedIn = SupabaseService.instance.client.auth.currentSession != null;
+    // 简单判断：有 token 就去主页，否则去登录页
+    final loggedIn = ApiService().isLoggedIn;
     Navigator.pushReplacementNamed(context, loggedIn ? '/main' : '/login');
   }
 

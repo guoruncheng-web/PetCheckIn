@@ -26,37 +26,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadData() async {
-    try {
-      final userId = SupabaseService.instance.currentUserId;
-      if (userId == null) return;
-      final pets = await SupabaseService.instance.listMyPets(userId);
-      final checkins = await SupabaseService.instance.listTodayCheckIns(userId);
-      if (mounted) {
-        setState(() {
-          _pets = pets;
-          _todayCheckIns = checkins;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      Toast.error('加载失败：$e');
-      if (mounted) setState(() => _loading = false);
+    // TODO: 迁移到 NestJS API
+    if (mounted) {
+      setState(() {
+        _pets = [];
+        _todayCheckIns = [];
+        _loading = false;
+      });
     }
   }
 
   Future<void> _checkIn() async {
-    if (_pets.isEmpty) {
-      Toast.info('请先添加宠物');
-      return;
-    }
-    final pet = _pets[_currentPetIndex];
-    try {
-      await SupabaseService.instance.createCheckIn(pet.id);
-      Toast.success('打卡成功');
-      await _loadData();
-    } catch (e) {
-      Toast.error('打卡失败：$e');
-    }
+    Toast.info('功能开发中...');
   }
 
   @override

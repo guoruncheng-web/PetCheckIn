@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pet_checkin/services/supabase_service.dart';
+import 'package:pet_checkin/main.dart';
 
 class Toast {
   static void success(String msg) {
-    final ctx = SupabaseService.instance.navigatorKey.currentContext;
+    final ctx = navigatorKey.currentContext;
     if (ctx == null) return;
     ScaffoldMessenger.of(ctx).showSnackBar(
       SnackBar(
@@ -15,7 +15,7 @@ class Toast {
   }
 
   static void error(String msg) {
-    final ctx = SupabaseService.instance.navigatorKey.currentContext;
+    final ctx = navigatorKey.currentContext;
     if (ctx == null) return;
     ScaffoldMessenger.of(ctx).showSnackBar(
       SnackBar(
@@ -27,7 +27,7 @@ class Toast {
   }
 
   static void info(String msg) {
-    final ctx = SupabaseService.instance.navigatorKey.currentContext;
+    final ctx = navigatorKey.currentContext;
     if (ctx == null) return;
     ScaffoldMessenger.of(ctx).showSnackBar(
       SnackBar(

@@ -27,7 +27,7 @@ class _SquarePageState extends State<SquarePage> {
 
   Future<void> _loadCheckIns({bool refresh = false}) async {
     try {
-      final data = await SupabaseService.instance.listSquareCheckIns(city: _selectedCity);
+      final data = []; // TODO: 迁移到 NestJS API
       if (mounted) {
         setState(() {
           _checkIns = data;
@@ -44,7 +44,7 @@ class _SquarePageState extends State<SquarePage> {
 
   Future<void> _toggleLike(CheckIn ci) async {
     try {
-      await SupabaseService.instance.toggleLike(checkInId: ci.id);
+      // TODO: 迁移到 NestJS API
       await _loadCheckIns();
     } catch (e) {
       Toast.error('操作失败：$e');
@@ -89,7 +89,7 @@ class _SquarePageState extends State<SquarePage> {
                       if (text.isEmpty) return;
                       Navigator.pop(context);
                       try {
-                        await SupabaseService.instance.createComment(
+                        // TODO: 迁移到 NestJS API // await SupabaseService.instance.createComment(
                           checkInId: ci.id,
                           content: text,
                         );

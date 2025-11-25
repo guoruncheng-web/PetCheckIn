@@ -4,6 +4,9 @@ import 'package:pet_checkin/ui/utils/screen_adapter.dart';
 import 'package:pet_checkin/services/api_service.dart';
 import 'package:pet_checkin/routes.dart';
 
+// Global navigator key for Toast
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -27,6 +30,7 @@ class PetCheckinApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      navigatorKey: navigatorKey,
       initialRoute: '/',
       onGenerateRoute: AppRoutes.onGenerateRoute,
     );
