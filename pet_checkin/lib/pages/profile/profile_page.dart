@@ -70,7 +70,6 @@ class _ProfilePageState extends State<ProfilePage> {
       return const Center(child: Text('未找到用户信息'));
     }
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: SizedBox(height: 32.h)),

@@ -115,7 +115,6 @@ class _SquarePageState extends State<SquarePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('萌宠广场'),
         elevation: 0,
