@@ -13,8 +13,8 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _phoneCtrl = TextEditingController();
+  final _codeCtrl = TextEditingController();
   final _pwdCtrl = TextEditingController();
-  final _confirmCtrl = TextEditingController();
   bool _loading = false;
   int _countdown = 0;
 
@@ -26,12 +26,8 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  
-
-  Future<void> _confirmRegister() async {
+  Future<void> _sendOtp() async {
     final phone = _phoneCtrl.text.trim();
-    final pwd = _pwdCtrl.text;
-    final confirm = _confirmCtrl.text;
     if (phone.isEmpty) {
       Toast.error('请输入手机号');
       return;
@@ -40,12 +36,52 @@ class _RegisterPageState extends State<RegisterPage> {
       Toast.error('请输入正确手机号（11位）');
       return;
     }
-    if (pwd.length < 6) {
-      Toast.error('请输入至少 6 位密码');
+    if (_countdown > 0) return;
+
+    setState(() => _loading = true);
+    try {
+      await SupabaseService.instance.sendOtp(phone: phone);
+      Toast.success('验证码已发送');
+      setState(() => _countdown = 60);
+      _startCountdown();
+    } catch (e) {
+      Toast.error('发送失败：$e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _startCountdown() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      if (_countdown > 0) {
+        setState(() => _countdown--);
+        _startCountdown();
+      }
+    });
+  }
+
+
+
+  Future<void> _confirmRegister() async {
+    final phone = _phoneCtrl.text.trim();
+    final code = _codeCtrl.text.trim();
+    final pwd = _pwdCtrl.text;
+
+    if (phone.isEmpty) {
+      Toast.error('请输入手机号');
       return;
     }
-    if (pwd != confirm) {
-      Toast.error('两次密码输入不一致');
+    if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
+      Toast.error('请输入正确手机号（11位）');
+      return;
+    }
+    if (code.isEmpty) {
+      Toast.error('请输入验证码');
+      return;
+    }
+    if (pwd.length < 6) {
+      Toast.error('请输入至少 6 位密码');
       return;
     }
     if (!SupabaseService.instance.isConfigProvided) {
@@ -57,10 +93,23 @@ class _RegisterPageState extends State<RegisterPage> {
       Toast.error('网络异常或证书问题，无法连接 Supabase');
       return;
     }
+
     setState(() => _loading = true);
     try {
+      // 先验证验证码
+      final isNew = await SupabaseService.instance.verifyOtp(phone: phone, code: code);
+      if (!isNew) {
+        Toast.error('手机号已注册，请直接登录');
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+        return;
+      }
+
+      // 验证码通过后，注册账号
       await SupabaseService.instance.signUpWithPhonePassword(phone: phone, password: pwd);
       if (!mounted) return;
+      Toast.success('注册成功');
       Navigator.pushReplacementNamed(context, '/main');
     } catch (e) {
       Toast.error('注册失败：$e');
@@ -72,8 +121,8 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _phoneCtrl.dispose();
+    _codeCtrl.dispose();
     _pwdCtrl.dispose();
-    _confirmCtrl.dispose();
     super.dispose();
   }
 
@@ -157,6 +206,48 @@ class _RegisterPageState extends State<RegisterPage> {
                       SizedBox(height: 8.h),
                       Text('手机号将作为您的登录账号', style: TextStyle(fontSize: 16.sp, color: const Color(0xFF92400E))),
                       SizedBox(height: 16.h),
+                      Text('验证码', style: TextStyle(fontSize: 14.sp, color: const Color(0xFF0A0A0A), fontWeight: FontWeight.w500)),
+                      SizedBox(height: 8.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 36.h,
+                              decoration: BoxDecoration(color: const Color(0xFFFFFBE8), border: Border.all(color: const Color(0xFFFFF085), width: 1), borderRadius: BorderRadius.circular(10.r)),
+                              child: TextField(
+                                controller: _codeCtrl,
+                                keyboardType: TextInputType.number,
+                                maxLength: 6,
+                                decoration: const InputDecoration(
+                                  hintText: '请输入验证码',
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  counterText: '',
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          SizedBox(
+                            width: 100.w,
+                            height: 36.h,
+                            child: TextButton(
+                              onPressed: _countdown > 0 ? null : _sendOtp,
+                              style: TextButton.styleFrom(
+                                backgroundColor: _countdown > 0 ? Colors.grey.shade300 : const Color(0xFFFE9A00),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                                padding: EdgeInsets.zero,
+                              ),
+                              child: Text(
+                                _countdown > 0 ? '${_countdown}s' : '获取验证码',
+                                style: TextStyle(fontSize: 14.sp),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16.h),
                       Text('密码', style: TextStyle(fontSize: 14.sp, color: const Color(0xFF0A0A0A), fontWeight: FontWeight.w500)),
                       SizedBox(height: 8.h),
                       Container(
@@ -166,29 +257,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _pwdCtrl,
                           obscureText: true,
                           decoration: const InputDecoration(
-                            hintText: '请输入密码',
+                            hintText: '请输入密码（至少6位）',
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
                         ),
                       ),
-                      SizedBox(height: 16.h),
-                      Text('确认密码', style: TextStyle(fontSize: 14.sp, color: const Color(0xFF0A0A0A), fontWeight: FontWeight.w500)),
-                      SizedBox(height: 8.h),
-                      Container(
-                        height: 36.h,
-                        decoration: BoxDecoration(color: const Color(0xFFFFFBE8), border: Border.all(color: const Color(0xFFFFF085), width: 1), borderRadius: BorderRadius.circular(10.r)),
-                        child: TextField(
-                          controller: _confirmCtrl,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            hintText: '请再次输入密码',
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 24.h),
                       Container(
                         height: 36.h,
                         width: double.infinity,
