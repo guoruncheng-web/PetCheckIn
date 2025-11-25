@@ -11,6 +11,11 @@ export interface ValidationRule {
   message?: string; // 自定义错误消息，如果提供则优先使用
 }
 
+export interface ValidationError {
+  field: string;
+  errorMsg: string;
+}
+
 export function ValidateParams(rules: ValidationRule[]) {
   return function (
     target: unknown,
@@ -22,7 +27,7 @@ export function ValidateParams(rules: ValidationRule[]) {
     descriptor.value = function (...args: unknown[]) {
       // 获取参数名称（假设按顺序传递）
       const paramNames = getParamNames(originalMethod);
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       rules.forEach((rule, index) => {
         const value = args[index];
@@ -34,7 +39,10 @@ export function ValidateParams(rules: ValidationRule[]) {
           rule.required &&
           (!value || (typeof value === 'string' && value.trim() === ''))
         ) {
-          errors.push(rule.message || `${fieldName}不能为空`);
+          errors.push({
+            field: fieldKey,
+            errorMsg: rule.message || `${fieldName}不能为空`,
+          });
           return; // 如果必填校验失败，跳过后续校验
         }
 
@@ -44,21 +52,28 @@ export function ValidateParams(rules: ValidationRule[]) {
 
           // 正则校验
           if (rule.pattern && !rule.pattern.test(stringValue)) {
-            errors.push(rule.message || `${fieldName}格式错误`);
+            errors.push({
+              field: fieldKey,
+              errorMsg: rule.message || `${fieldName}格式错误`,
+            });
           }
 
           // 最小长度校验
           if (rule.minLength && stringValue.length < rule.minLength) {
-            errors.push(
-              rule.message || `${fieldName}长度不能少于${rule.minLength}位`,
-            );
+            errors.push({
+              field: fieldKey,
+              errorMsg:
+                rule.message || `${fieldName}长度不能少于${rule.minLength}位`,
+            });
           }
 
           // 最大长度校验
           if (rule.maxLength && stringValue.length > rule.maxLength) {
-            errors.push(
-              rule.message || `${fieldName}长度不能超过${rule.maxLength}位`,
-            );
+            errors.push({
+              field: fieldKey,
+              errorMsg:
+                rule.message || `${fieldName}长度不能超过${rule.maxLength}位`,
+            });
           }
         }
       });

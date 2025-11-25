@@ -1,8 +1,14 @@
 import { ProfilesService } from './profiles.service';
+interface AuthRequest extends Request {
+    user: {
+        userId: string;
+        phone: string;
+    };
+}
 export declare class ProfilesController {
     private readonly profilesService;
     constructor(profilesService: ProfilesService);
-    getMyProfile(req: any): Promise<{
+    getMyProfile(req: AuthRequest): Promise<{
         code: number;
         message: string;
         data: null;
@@ -29,7 +35,7 @@ export declare class ProfilesController {
             updatedAt: Date;
         };
     }>;
-    updateMyProfile(req: any, body: {
+    updateMyProfile(req: AuthRequest, body: {
         nickname?: string;
         avatarUrl?: string;
         bio?: string;
@@ -40,14 +46,15 @@ export declare class ProfilesController {
         message: string;
         data: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
+            userId: string;
             nickname: string;
             avatarUrl: string | null;
             bio: string | null;
             cityCode: string | null;
             cityName: string | null;
-            userId: string;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
 }
+export {};

@@ -19,15 +19,28 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
         super({
             log: [
                 { level: 'query', emit: 'event' },
-                { level: 'info', emit: 'stdout' },
-                { level: 'warn', emit: 'stdout' },
-                { level: 'error', emit: 'stdout' },
+                { level: 'info', emit: 'event' },
+                { level: 'warn', emit: 'event' },
+                { level: 'error', emit: 'event' },
             ],
         });
         this.$on('query', (e) => {
-            this.logger.log(`Query: ${e.query}`);
-            this.logger.log(`Params: ${e.params}`);
-            this.logger.log(`Duration: ${e.duration}ms`);
+            this.logger.debug('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            this.logger.debug(`🔍 SQL Query:`);
+            this.logger.debug(`   ${e.query}`);
+            this.logger.debug(`📊 Params: ${e.params}`);
+            this.logger.debug(`⏱️  Duration: ${e.duration}ms`);
+            this.logger.debug(`🎯 Target: ${e.target || 'N/A'}`);
+            this.logger.debug('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        });
+        this.$on('info', (e) => {
+            this.logger.log(`ℹ️  ${e.message}`);
+        });
+        this.$on('warn', (e) => {
+            this.logger.warn(`⚠️  ${e.message}`);
+        });
+        this.$on('error', (e) => {
+            this.logger.error(`❌ ${e.message}`);
         });
     }
     async onModuleInit() {

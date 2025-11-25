@@ -6,6 +6,10 @@ export interface ValidationRule {
     maxLength?: number;
     message?: string;
 }
+export interface ValidationError {
+    field: string;
+    errorMsg: string;
+}
 export declare function ValidateParams(rules: ValidationRule[]): (target: unknown, propertyName: string, descriptor: PropertyDescriptor) => void;
 export declare const ValidationRules: {
     phone: {

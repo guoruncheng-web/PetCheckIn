@@ -16,19 +16,31 @@ function ValidateParams(rules) {
                 const fieldName = field_names_1.FieldNames[fieldKey] || fieldKey;
                 if (rule.required &&
                     (!value || (typeof value === 'string' && value.trim() === ''))) {
-                    errors.push(rule.message || `${fieldName}不能为空`);
+                    errors.push({
+                        field: fieldKey,
+                        errorMsg: rule.message || `${fieldName}不能为空`,
+                    });
                     return;
                 }
                 if (value && (typeof value !== 'string' || value.trim() !== '')) {
                     const stringValue = String(value);
                     if (rule.pattern && !rule.pattern.test(stringValue)) {
-                        errors.push(rule.message || `${fieldName}格式错误`);
+                        errors.push({
+                            field: fieldKey,
+                            errorMsg: rule.message || `${fieldName}格式错误`,
+                        });
                     }
                     if (rule.minLength && stringValue.length < rule.minLength) {
-                        errors.push(rule.message || `${fieldName}长度不能少于${rule.minLength}位`);
+                        errors.push({
+                            field: fieldKey,
+                            errorMsg: rule.message || `${fieldName}长度不能少于${rule.minLength}位`,
+                        });
                     }
                     if (rule.maxLength && stringValue.length > rule.maxLength) {
-                        errors.push(rule.message || `${fieldName}长度不能超过${rule.maxLength}位`);
+                        errors.push({
+                            field: fieldKey,
+                            errorMsg: rule.message || `${fieldName}长度不能超过${rule.maxLength}位`,
+                        });
                     }
                 }
             });

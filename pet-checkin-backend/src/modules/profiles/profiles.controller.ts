@@ -2,13 +2,20 @@ import { Controller, Get, Put, Body, UseGuards, Request } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+interface AuthRequest extends Request {
+  user: {
+    userId: string;
+    phone: string;
+  };
+}
+
 @Controller('profiles')
 @UseGuards(JwtAuthGuard)
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
   @Get('me')
-  async getMyProfile(@Request() req) {
+  async getMyProfile(@Request() req: AuthRequest) {
     const userId = req.user.userId;
     const profile = await this.profilesService.getProfile(userId);
 
@@ -28,13 +35,17 @@ export class ProfilesController {
   }
 
   @Put('me')
-  async updateMyProfile(@Request() req, @Body() body: {
-    nickname?: string;
-    avatarUrl?: string;
-    bio?: string;
-    cityCode?: string;
-    cityName?: string;
-  }) {
+  async updateMyProfile(
+    @Request() req: AuthRequest,
+    @Body()
+    body: {
+      nickname?: string;
+      avatarUrl?: string;
+      bio?: string;
+      cityCode?: string;
+      cityName?: string;
+    },
+  ) {
     const userId = req.user.userId;
     const profile = await this.profilesService.updateProfile(userId, body);
 
