@@ -32,7 +32,22 @@ class _ProfilePageState extends State<ProfilePage> {
       if (userProvider.profile == null && !userProvider.isLoading) {
         userProvider.fetchProfile();
       }
+      _loadPets();
     });
+  }
+
+  Future<void> _loadPets() async {
+    try {
+      final result = await ApiService().getMyPets();
+      if (mounted && result['code'] == 200) {
+        final List<dynamic> petsData = result['data'] ?? [];
+        setState(() {
+          _pets = petsData.map((json) => Pet.fromJson(json)).toList();
+        });
+      }
+    } catch (e) {
+      print('获取宠物列表失败：$e');
+    }
   }
 
   Future<void> _pickAndUploadAvatar() async {
@@ -108,7 +123,9 @@ class _ProfilePageState extends State<ProfilePage> {
         title: const Text('退出登录'),
         content: const Text('确定要退出当前账号吗？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('取消')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text('退出', style: TextStyle(color: Colors.red)),
@@ -214,7 +231,8 @@ class _ProfilePageState extends State<ProfilePage> {
             await ApiService().logout();
             await userProvider.clearProfile();
             if (mounted) {
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/login', (route) => false);
             }
           });
         }
@@ -232,7 +250,8 @@ class _ProfilePageState extends State<ProfilePage> {
           body: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
-                child: SizedBox(height: MediaQuery.of(context).padding.top + 16.h),
+                child:
+                    SizedBox(height: MediaQuery.of(context).padding.top + 16.h),
               ),
               _buildHeader(p),
               SliverToBoxAdapter(child: SizedBox(height: 24.h)),
@@ -320,7 +339,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       Text(
                         p.nickname,
-                        style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            fontSize: 18.sp, fontWeight: FontWeight.w600),
                       ),
                       if (p.isVerified)
                         Padding(
@@ -492,107 +512,85 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildMyPets() {
     return SliverToBoxAdapter(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.w),
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade200,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '我的萌宠',
-                  style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, '/add_pet'),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add, size: 16.w, color: Colors.orange),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '添加',
-                        style: TextStyle(fontSize: 13.sp, color: Colors.orange),
-                      ),
-                    ],
+      child: GestureDetector(
+        onTap: () async {
+          final result = await Navigator.pushNamed(context, '/my_pets');
+          if (result == true && mounted) {
+            _loadPets(); // 从宠物列表页返回后刷新
+          }
+        },
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 16.w),
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade200,
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '我的萌宠',
+                    style:
+                        TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-            if (_pets.isEmpty)
-              Center(
-                child: Text(
-                  '还没有萌宠，点击右上角添加',
-                  style: TextStyle(fontSize: 13.sp, color: Colors.grey),
-                ),
-              )
-            else
-              ..._pets.map((pet) {
-                return Container(
-                  margin: EdgeInsets.only(bottom: 12.h),
-                  child: Row(
-                    children: [
-                      ClipOval(
+                  Icon(Icons.chevron_right, size: 20.w, color: Colors.grey),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              if (_pets.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    child: Text(
+                      '还没有萌宠',
+                      style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 60.h,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _pets.length,
+                    separatorBuilder: (_, __) => SizedBox(width: 12.w),
+                    itemBuilder: (_, index) {
+                      final pet = _pets[index];
+                      return ClipOval(
                         child: pet.avatarUrl?.isNotEmpty == true
                             ? Image.network(
                                 pet.avatarUrl!,
-                                width: 40.w,
-                                height: 40.w,
+                                width: 60.w,
+                                height: 60.w,
                                 fit: BoxFit.cover,
                               )
                             : Container(
-                                width: 40.w,
-                                height: 40.w,
+                                width: 60.w,
+                                height: 60.w,
                                 color: Colors.orange.shade200,
                                 child: Icon(
                                   Icons.pets,
-                                  size: 20.w,
+                                  size: 30.w,
                                   color: Colors.white,
                                 ),
                               ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              pet.name,
-                              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox(height: 2.h),
-                            Text(
-                              '${pet.breed} · ${pet.age}岁',
-                              style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pushNamed(context, '/pet_detail', arguments: pet),
-                        icon: Icon(Icons.chevron_right, size: 20.w, color: Colors.grey),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              }),
-          ],
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -601,7 +599,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildMenus() {
     final menus = [
       {'icon': Icons.bug_report, 'title': '网络日志', 'route': 'network_inspector'},
-      {'icon': Icons.settings, 'title': '账号设置', 'route': '/settings'},
+      {'icon': Icons.settings, 'title': '账号设置', 'route': '/my_info'},
+      {'icon': Icons.pets_outlined, 'title': '我的宠物', 'route': '/my_pets'},
       {'icon': Icons.lock, 'title': '隐私政策', 'route': '/privacy'},
       {'icon': Icons.help_outline, 'title': '帮助中心', 'route': '/help'},
       {'icon': Icons.info_outline, 'title': '关于我们', 'route': '/about'},
@@ -626,8 +625,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             child: ListTile(
               leading: Icon(m['icon'] as IconData, color: Colors.orange),
-              title: Text(m['title'] as String, style: TextStyle(fontSize: 14.sp)),
-              trailing: Icon(Icons.chevron_right, size: 20.w, color: Colors.grey),
+              title:
+                  Text(m['title'] as String, style: TextStyle(fontSize: 14.sp)),
+              trailing:
+                  Icon(Icons.chevron_right, size: 20.w, color: Colors.grey),
               onTap: () {
                 final route = m['route'];
                 if (route == null) {

@@ -59,6 +59,26 @@ let PetsService = class PetsService {
         }
         return pet;
     }
+    async update(id, userId, updatePetDto) {
+        await this.findOne(id, userId);
+        if (updatePetDto.imageUrls && updatePetDto.imageUrls.length > 6) {
+            throw new common_1.BadRequestException('最多只能上传6张照片');
+        }
+        const pet = await this.prisma.pet.update({
+            where: { id },
+            data: {
+                ...(updatePetDto.name && { name: updatePetDto.name }),
+                ...(updatePetDto.breed !== undefined && { breed: updatePetDto.breed }),
+                ...(updatePetDto.birthday && { birthday: new Date(updatePetDto.birthday) }),
+                ...(updatePetDto.weight !== undefined && { weight: updatePetDto.weight }),
+                ...(updatePetDto.avatarUrl !== undefined && { avatarUrl: updatePetDto.avatarUrl }),
+                ...(updatePetDto.description !== undefined && { description: updatePetDto.description }),
+                ...(updatePetDto.imageUrls !== undefined && { imageUrls: updatePetDto.imageUrls }),
+                ...(updatePetDto.videoUrl !== undefined && { videoUrl: updatePetDto.videoUrl }),
+            },
+        });
+        return pet;
+    }
     async remove(id, userId) {
         const pet = await this.findOne(id, userId);
         await this.prisma.pet.delete({

@@ -8,6 +8,9 @@ import 'package:pet_checkin/pages/home/home_page.dart';
 import 'package:pet_checkin/pages/square/square_page.dart';
 import 'package:pet_checkin/pages/profile/profile_page.dart';
 import 'package:pet_checkin/pages/pet/add_pet_page.dart';
+import 'package:pet_checkin/models/pet.dart';
+import 'package:pet_checkin/pages/myPets/my_pets_page.dart';
+import 'package:pet_checkin/pages/Info/person_info.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -19,6 +22,9 @@ class AppRoutes {
   static const String square = '/square';
   static const String profile = '/profile';
   static const String addPet = '/add_pet';
+  static const String petDetail = '/pet_detail';
+  static const String myPets = '/my_pets';
+  static const String myInfo = '/my_info';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -41,6 +47,13 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const ProfilePage());
       case addPet:
         return MaterialPageRoute(builder: (_) => const AddPetPage());
+      case petDetail:
+        final pet = settings.arguments as Pet?;
+        return MaterialPageRoute(builder: (_) => AddPetPage(pet: pet));
+      case myPets:
+        return MaterialPageRoute(builder: (_) => const MyPetsPage());
+      case myInfo:
+        return MaterialPageRoute(builder: (_) => const MyInfo());
       default:
         return MaterialPageRoute(builder: (_) => const SplashPage());
     }

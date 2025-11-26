@@ -247,14 +247,19 @@ class _HomePageState extends State<HomePage> {
           itemCount: _pets.length,
           onPageChanged: (i) => setState(() {}),
           padEnds: false,
-          controller: PageController(viewportFraction: 0.78, initialPage: 0),
+          controller: PageController(viewportFraction: 1.0, initialPage: 0),
           itemBuilder: (ctx, i) {
             final pet = _pets[i];
             return GestureDetector(
-              onTap: () =>
-                  Navigator.pushNamed(context, '/pet_detail', arguments: pet),
+              onTap: () async {
+                final result = await Navigator.pushNamed(context, '/pet_detail',
+                    arguments: pet);
+                if (result == true && mounted) {
+                  _loadData(); // 编辑成功后刷新数据
+                }
+              },
               child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 8.w),
+                margin: EdgeInsets.symmetric(horizontal: 16.w),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20.r),
                   gradient: const LinearGradient(
@@ -279,11 +284,6 @@ class _HomePageState extends State<HomePage> {
                         badgeStyle: badges.BadgeStyle(
                           badgeColor: Colors.white,
                           padding: EdgeInsets.all(4.w),
-                        ),
-                        badgeContent: Text(
-                          '${pet.age}岁',
-                          style:
-                              TextStyle(fontSize: 10.sp, color: Colors.orange),
                         ),
                         child: ClipOval(
                           child: pet.avatarUrl?.isNotEmpty == true

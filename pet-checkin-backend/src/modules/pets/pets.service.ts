@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreatePetDto } from './dto/create-pet.dto';
+import { UpdatePetDto } from './dto/update-pet.dto';
 
 @Injectable()
 export class PetsService {
@@ -57,6 +58,33 @@ export class PetsService {
     if (!pet) {
       throw new NotFoundException('宠物不存在');
     }
+
+    return pet;
+  }
+
+  async update(id: string, userId: string, updatePetDto: UpdatePetDto) {
+    // 先验证宠物是否存在且属于当前用户
+    await this.findOne(id, userId);
+
+    // 检查图片数量（最多6张）
+    if (updatePetDto.imageUrls && updatePetDto.imageUrls.length > 6) {
+      throw new BadRequestException('最多只能上传6张照片');
+    }
+
+    // 更新宠物信息（注意：性别不能修改）
+    const pet = await this.prisma.pet.update({
+      where: { id },
+      data: {
+        ...(updatePetDto.name && { name: updatePetDto.name }),
+        ...(updatePetDto.breed !== undefined && { breed: updatePetDto.breed }),
+        ...(updatePetDto.birthday && { birthday: new Date(updatePetDto.birthday) }),
+        ...(updatePetDto.weight !== undefined && { weight: updatePetDto.weight }),
+        ...(updatePetDto.avatarUrl !== undefined && { avatarUrl: updatePetDto.avatarUrl }),
+        ...(updatePetDto.description !== undefined && { description: updatePetDto.description }),
+        ...(updatePetDto.imageUrls !== undefined && { imageUrls: updatePetDto.imageUrls }),
+        ...(updatePetDto.videoUrl !== undefined && { videoUrl: updatePetDto.videoUrl }),
+      },
+    });
 
     return pet;
   }

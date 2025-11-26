@@ -20,9 +20,6 @@ class Pet {
   /// 生日
   final DateTime? birthday;
 
-  /// 年龄 (计算字段，非数据库字段)
-  final int? age;
-
   /// 体重 (单位: kg)
   final double? weightKg;
 
@@ -41,6 +38,12 @@ class Pet {
   /// 头像 URL (阿里云 OSS 路径)
   final String? avatarUrl;
 
+  /// 照片墙 URLs (最多6张)
+  final List<String>? imageUrls;
+
+  /// 视频 URL (1个)
+  final String? videoUrl;
+
   /// 创建时间
   final DateTime createdAt;
 
@@ -51,15 +54,28 @@ class Pet {
     this.breed,
     this.gender,
     this.birthday,
-    this.age,
     this.weightKg,
     this.color,
     this.microchip,
     this.neutered,
     this.description,
     this.avatarUrl,
+    this.imageUrls,
+    this.videoUrl,
     required this.createdAt,
   });
+
+  /// 计算年龄 (根据生日计算)
+  int? get age {
+    if (birthday == null) return null;
+    final now = DateTime.now();
+    int age = now.year - birthday!.year;
+    if (now.month < birthday!.month ||
+        (now.month == birthday!.month && now.day < birthday!.day)) {
+      age--;
+    }
+    return age;
+  }
 
   factory Pet.fromJson(Map<String, dynamic> json) => Pet(
         id: json['id'] as String,
@@ -68,13 +84,16 @@ class Pet {
         breed: json['breed'] as String?,
         gender: json['gender'] as String?,
         birthday: json['birthday'] == null ? null : DateTime.parse(json['birthday'] as String),
-        age: json['age'] as int?,
         weightKg: ((json['weight'] ?? json['weight_kg']) as num?)?.toDouble(),
         color: json['color'] as String?,
         microchip: json['microchip'] as String?,
         neutered: json['neutered'] as bool?,
         description: json['description'] as String?,
         avatarUrl: (json['avatarUrl'] ?? json['avatar_url']) as String?,
+        imageUrls: (json['imageUrls'] ?? json['image_urls']) != null
+            ? List<String>.from((json['imageUrls'] ?? json['image_urls']) as List)
+            : null,
+        videoUrl: (json['videoUrl'] ?? json['video_url']) as String?,
         createdAt: DateTime.parse((json['createdAt'] ?? json['created_at']) as String),
       );
 
@@ -92,6 +111,8 @@ class Pet {
         'neutered': neutered,
         'description': description,
         'avatar_url': avatarUrl,
+        'image_urls': imageUrls,
+        'video_url': videoUrl,
         'created_at': createdAt.toIso8601String(),
       };
 

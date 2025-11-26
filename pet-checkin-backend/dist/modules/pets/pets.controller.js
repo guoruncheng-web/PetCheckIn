@@ -16,6 +16,7 @@ exports.PetsController = void 0;
 const common_1 = require("@nestjs/common");
 const pets_service_1 = require("./pets.service");
 const create_pet_dto_1 = require("./dto/create-pet.dto");
+const update_pet_dto_1 = require("./dto/update-pet.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 let PetsController = class PetsController {
     petsService;
@@ -44,6 +45,14 @@ let PetsController = class PetsController {
             code: 200,
             data: pet,
             message: '获取成功',
+        };
+    }
+    async update(req, id, updatePetDto) {
+        const pet = await this.petsService.update(id, req.user.userId, updatePetDto);
+        return {
+            code: 200,
+            data: pet,
+            message: '更新成功',
         };
     }
     async remove(req, id) {
@@ -78,6 +87,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], PetsController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, update_pet_dto_1.UpdatePetDto]),
+    __metadata("design:returntype", Promise)
+], PetsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Request)()),

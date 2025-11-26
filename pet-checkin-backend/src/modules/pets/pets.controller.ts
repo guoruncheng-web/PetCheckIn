@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Delete,
   Param,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
+import { UpdatePetDto } from './dto/update-pet.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('pets')
@@ -44,6 +46,20 @@ export class PetsController {
       code: 200,
       data: pet,
       message: '获取成功',
+    };
+  }
+
+  @Put(':id')
+  async update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updatePetDto: UpdatePetDto,
+  ) {
+    const pet = await this.petsService.update(id, req.user.userId, updatePetDto);
+    return {
+      code: 200,
+      data: pet,
+      message: '更新成功',
     };
   }
 

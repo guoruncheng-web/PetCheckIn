@@ -250,6 +250,31 @@ class ApiService {
     return response.data;
   }
 
+  /// 更新宠物信息
+  Future<Map<String, dynamic>> updatePet({
+    required String petId,
+    String? name,
+    String? breed,
+    String? avatarUrl,
+    DateTime? birthday,
+    double? weight,
+    String? description,
+    List<String>? imageUrls,
+    String? videoUrl,
+  }) async {
+    final response = await _dio.put('/pets/$petId', data: {
+      if (name != null) 'name': name,
+      if (breed != null) 'breed': breed,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      if (birthday != null) 'birthday': birthday.toIso8601String(),
+      if (weight != null) 'weight': weight,
+      if (description != null && description.isNotEmpty) 'description': description,
+      if (imageUrls != null && imageUrls.isNotEmpty) 'imageUrls': imageUrls,
+      if (videoUrl != null) 'videoUrl': videoUrl,
+    });
+    return response.data;
+  }
+
   // Storage APIs
   Future<Map<String, dynamic>> uploadFile(String filePath, String type) async {
     final formData = FormData.fromMap({
