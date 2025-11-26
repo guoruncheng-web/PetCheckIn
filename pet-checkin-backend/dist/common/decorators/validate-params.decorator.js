@@ -10,9 +10,13 @@ function ValidateParams(rules) {
         descriptor.value = function (...args) {
             const paramNames = getParamNames(originalMethod);
             const errors = [];
-            rules.forEach((rule, index) => {
-                const value = args[index];
-                const fieldKey = rule.field || paramNames[index];
+            rules.forEach((rule) => {
+                const paramIndex = paramNames.findIndex(name => name === rule.field);
+                if (paramIndex === -1) {
+                    return;
+                }
+                const value = args[paramIndex];
+                const fieldKey = rule.field;
                 const fieldName = field_names_1.FieldNames[fieldKey] || fieldKey;
                 if (rule.required &&
                     (!value || (typeof value === 'string' && value.trim() === ''))) {

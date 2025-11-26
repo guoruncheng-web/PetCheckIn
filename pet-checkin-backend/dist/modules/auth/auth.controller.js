@@ -27,8 +27,8 @@ let AuthController = class AuthController {
     async verifyOtp(phone, code) {
         return this.authService.verifyOtp(phone, code);
     }
-    async register(phone, password, nickname) {
-        return this.authService.register(phone, password, nickname);
+    async register(phone, password, nickname, cityCode, cityName) {
+        return this.authService.register(phone, password, nickname, cityCode, cityName);
     }
     async login(phone, password) {
         return this.authService.login(phone, password);
@@ -69,8 +69,10 @@ __decorate([
     __param(0, (0, common_1.Body)('phone')),
     __param(1, (0, common_1.Body)('password')),
     __param(2, (0, common_1.Body)('nickname')),
+    __param(3, (0, common_1.Body)('cityCode')),
+    __param(4, (0, common_1.Body)('cityName')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([

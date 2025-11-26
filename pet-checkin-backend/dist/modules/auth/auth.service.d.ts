@@ -3,6 +3,7 @@ import { PrismaService } from '../database/prisma.service';
 export declare class AuthService {
     private readonly prisma;
     private readonly jwtService;
+    private readonly logger;
     private otpStore;
     constructor(prisma: PrismaService, jwtService: JwtService);
     sendOtp(phone: string): {
@@ -19,7 +20,7 @@ export declare class AuthService {
         };
         message: string;
     }>;
-    register(phone: string, password: string, nickname?: string): Promise<{
+    register(phone: string, password: string, nickname?: string, cityCode?: string, cityName?: string): Promise<{
         code: number;
         data: {
             token: string;

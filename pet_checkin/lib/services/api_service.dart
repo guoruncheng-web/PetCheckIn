@@ -217,6 +217,39 @@ class ApiService {
     return response.data;
   }
 
+  // Pet APIs
+  /// 创建宠物
+  Future<Map<String, dynamic>> createPet({
+    required String name,
+    required String breed,
+    required String gender,
+    String? avatarUrl,
+    DateTime? birthday,
+    double? weight,
+    String? description,
+    List<String>? imageUrls,
+    String? videoUrl,
+  }) async {
+    final response = await _dio.post('/pets', data: {
+      'name': name,
+      'breed': breed,
+      'gender': gender,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      if (birthday != null) 'birthday': birthday.toIso8601String(),
+      if (weight != null) 'weight': weight,
+      if (description != null && description.isNotEmpty) 'description': description,
+      if (imageUrls != null && imageUrls.isNotEmpty) 'imageUrls': imageUrls,
+      if (videoUrl != null) 'videoUrl': videoUrl,
+    });
+    return response.data;
+  }
+
+  /// 获取我的宠物列表
+  Future<Map<String, dynamic>> getMyPets() async {
+    final response = await _dio.get('/pets/me');
+    return response.data;
+  }
+
   // Storage APIs
   Future<Map<String, dynamic>> uploadFile(String filePath, String type) async {
     final formData = FormData.fromMap({

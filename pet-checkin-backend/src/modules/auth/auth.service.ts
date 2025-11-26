@@ -2,13 +2,16 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../database/prisma.service';
+import { LocationService } from '../location/location.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   // 内存存储验证码（生产环境应使用 Redis）
   private otpStore = new Map<string, { code: string; expiresAt: number }>();
 
@@ -70,7 +73,13 @@ export class AuthService {
     };
   }
 
-  async register(phone: string, password: string, nickname?: string) {
+  async register(
+    phone: string,
+    password: string,
+    nickname?: string,
+    cityCode?: string,
+    cityName?: string,
+  ) {
     // 检查用户是否已存在
     const existingUser = await this.prisma.user.findUnique({
       where: { phone },
@@ -89,14 +98,20 @@ export class AuthService {
       },
     });
 
-    // 创建用户资料
+    // 创建用户资料（包含城市信息）
     const defaultNickname = nickname || `宠友${phone.slice(-4)}`;
     await this.prisma.profile.create({
       data: {
         userId: user.id,
         nickname: defaultNickname,
+        cityCode,
+        cityName,
       },
     });
+
+    this.logger.log(
+      `用户 ${phone} 注册成功，城市: ${cityName || '未设置'} (${cityCode || '未设置'})`,
+    );
 
     // 生成 JWT Token
     const token = this.jwtService.sign({

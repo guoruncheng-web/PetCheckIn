@@ -22,6 +22,8 @@ export declare class ProfilesController {
             nickname: string;
             avatarUrl: string | null;
             bio: string | null;
+            gender: string | null;
+            birthday: Date | null;
             phone: string;
             cityCode: string | null;
             cityName: string | null;
@@ -40,6 +42,8 @@ export declare class ProfilesController {
         nickname?: string;
         avatarUrl?: string;
         bio?: string;
+        gender?: string;
+        birthday?: string;
         cityCode?: string;
         cityName?: string;
     }): Promise<{
@@ -52,6 +56,25 @@ export declare class ProfilesController {
             nickname: string;
             avatarUrl: string | null;
             bio: string | null;
+            gender: string | null;
+            birthday: Date | null;
+            cityCode: string | null;
+            cityName: string | null;
+            userId: string;
+        };
+    }>;
+    updateMyCity(req: AuthRequest, cityCode: string, cityName: string): Promise<{
+        code: number;
+        message: string;
+        data: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            nickname: string;
+            avatarUrl: string | null;
+            bio: string | null;
+            gender: string | null;
+            birthday: Date | null;
             cityCode: string | null;
             cityName: string | null;
             userId: string;

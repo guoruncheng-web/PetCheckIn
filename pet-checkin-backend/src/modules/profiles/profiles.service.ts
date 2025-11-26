@@ -62,6 +62,8 @@ export class ProfilesService {
       nickname: profile.nickname,
       avatarUrl: profile.avatarUrl,
       bio: profile.bio,
+      gender: profile.gender,
+      birthday: profile.birthday,
       phone: profile.user.phone,
       cityCode: profile.cityCode,
       cityName: profile.cityName || profile.cityCode,
@@ -81,12 +83,20 @@ export class ProfilesService {
     nickname?: string;
     avatarUrl?: string;
     bio?: string;
+    gender?: string;
+    birthday?: string;
     cityCode?: string;
     cityName?: string;
   }) {
+    // 处理 birthday 字符串转日期
+    const updateData: any = { ...data };
+    if (data.birthday) {
+      updateData.birthday = new Date(data.birthday);
+    }
+
     return this.prisma.profile.update({
       where: { userId },
-      data,
+      data: updateData,
     });
   }
 }

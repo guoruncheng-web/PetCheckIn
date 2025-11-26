@@ -1,16 +1,41 @@
+/// 打卡记录模型
+/// 对应数据库表: checkins
+/// 与 users 表 N:1，与 pets 表 N:1 关系
+/// 用于记录用户为宠物的每日打卡，支持图片、位置信息
 class CheckIn {
+  /// 打卡 ID (UUID)
   final String id;
+
+  /// 宠物 ID (外键 -> pets.id)
   final String petId;
+
+  /// 用户 ID (外键 -> users.id)
   final String userId;
+
+  /// 打卡图片 URL 列表 (最多 9 张，阿里云 OSS 路径)
   final List<String> imageUrls;
+
+  /// 城市名称 (来自数据库的 cityName 字段)
   final String? city;
+
+  /// 打卡时间
   final DateTime createdAt;
 
-  // 冗余字段，方便 UI 展示
+  // === 冗余字段，方便 UI 展示，非数据库字段 ===
+
+  /// 宠物名称 (从 pet 关联查询)
   final String petName;
+
+  /// 宠物头像 (从 pet 关联查询)
   final String petAvatarUrl;
+
+  /// 点赞数 (实时计算或缓存)
   int likeCount;
+
+  /// 评论数 (实时计算或缓存)
   int commentCount;
+
+  /// 当前用户是否已点赞
   bool isLiked;
 
   CheckIn({

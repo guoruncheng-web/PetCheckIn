@@ -16,7 +16,7 @@ export declare class AuthController {
         };
         message: string;
     }>;
-    register(phone: string, password: string, nickname?: string): Promise<{
+    register(phone: string, password: string, nickname?: string, cityCode?: string, cityName?: string): Promise<{
         code: number;
         data: {
             token: string;

@@ -8,6 +8,8 @@ export declare class ProfilesService {
         nickname: string;
         avatarUrl: string | null;
         bio: string | null;
+        gender: string | null;
+        birthday: Date | null;
         phone: string;
         cityCode: string | null;
         cityName: string | null;
@@ -25,6 +27,8 @@ export declare class ProfilesService {
         nickname?: string;
         avatarUrl?: string;
         bio?: string;
+        gender?: string;
+        birthday?: string;
         cityCode?: string;
         cityName?: string;
     }): Promise<{
@@ -34,6 +38,8 @@ export declare class ProfilesService {
         nickname: string;
         avatarUrl: string | null;
         bio: string | null;
+        gender: string | null;
+        birthday: Date | null;
         cityCode: string | null;
         cityName: string | null;
         userId: string;

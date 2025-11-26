@@ -41,15 +41,17 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../database/prisma.service");
 const bcrypt = __importStar(require("bcrypt"));
-let AuthService = class AuthService {
+let AuthService = AuthService_1 = class AuthService {
     prisma;
     jwtService;
+    logger = new common_1.Logger(AuthService_1.name);
     otpStore = new Map();
     constructor(prisma, jwtService) {
         this.prisma = prisma;
@@ -92,7 +94,7 @@ let AuthService = class AuthService {
             message: '验证成功',
         };
     }
-    async register(phone, password, nickname) {
+    async register(phone, password, nickname, cityCode, cityName) {
         const existingUser = await this.prisma.user.findUnique({
             where: { phone },
         });
@@ -111,8 +113,11 @@ let AuthService = class AuthService {
             data: {
                 userId: user.id,
                 nickname: defaultNickname,
+                cityCode,
+                cityName,
             },
         });
+        this.logger.log(`用户 ${phone} 注册成功，城市: ${cityName || '未设置'} (${cityCode || '未设置'})`);
         const token = this.jwtService.sign({
             sub: user.id,
             phone: user.phone,
@@ -194,7 +199,7 @@ let AuthService = class AuthService {
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         jwt_1.JwtService])

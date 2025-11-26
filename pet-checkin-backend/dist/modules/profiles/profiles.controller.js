@@ -51,6 +51,20 @@ let ProfilesController = ProfilesController_1 = class ProfilesController {
             data: profile,
         };
     }
+    async updateMyCity(req, cityCode, cityName) {
+        this.logger.log(`📍 PUT /profiles/me/city called`);
+        this.logger.debug(`User: ${req.user.userId}, City: ${cityName} (${cityCode})`);
+        const userId = req.user.userId;
+        const profile = await this.profilesService.updateProfile(userId, {
+            cityCode,
+            cityName,
+        });
+        return {
+            code: 200,
+            message: '城市修改成功',
+            data: profile,
+        };
+    }
 };
 exports.ProfilesController = ProfilesController;
 __decorate([
@@ -68,6 +82,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ProfilesController.prototype, "updateMyProfile", null);
+__decorate([
+    (0, common_1.Put)('me/city'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)('cityCode')),
+    __param(2, (0, common_1.Body)('cityName')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], ProfilesController.prototype, "updateMyCity", null);
 exports.ProfilesController = ProfilesController = ProfilesController_1 = __decorate([
     (0, common_1.Controller)('profiles'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

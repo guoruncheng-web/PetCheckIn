@@ -56,6 +56,8 @@ export class ProfilesController {
       nickname?: string;
       avatarUrl?: string;
       bio?: string;
+      gender?: string;
+      birthday?: string;
       cityCode?: string;
       cityName?: string;
     },
@@ -66,6 +68,28 @@ export class ProfilesController {
     return {
       code: 200,
       message: '更新个人信息成功',
+      data: profile,
+    };
+  }
+
+  @Put('me/city')
+  async updateMyCity(
+    @Request() req: AuthRequest,
+    @Body('cityCode') cityCode: string,
+    @Body('cityName') cityName: string,
+  ) {
+    this.logger.log(`📍 PUT /profiles/me/city called`);
+    this.logger.debug(`User: ${req.user.userId}, City: ${cityName} (${cityCode})`);
+
+    const userId = req.user.userId;
+    const profile = await this.profilesService.updateProfile(userId, {
+      cityCode,
+      cityName,
+    });
+
+    return {
+      code: 200,
+      message: '城市修改成功',
       data: profile,
     };
   }

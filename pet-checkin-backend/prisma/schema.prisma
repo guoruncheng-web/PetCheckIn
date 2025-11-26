@@ -35,6 +35,8 @@ model Profile {
   nickname      String
   avatarUrl     String?     @map("avatar_url")
   bio           String?
+  gender        String?
+  birthday      DateTime?
   cityCode      String?     @map("city_code")
   cityName      String?     @map("city_name")
   createdAt     DateTime    @default(now()) @map("created_at")
@@ -55,6 +57,9 @@ model Pet {
   birthday      DateTime?
   weight        Float?
   avatarUrl     String?     @map("avatar_url")
+  description   String?     // 宠物简介/描述
+  imageUrls     String[]    @default([]) @map("image_urls") // 最多6张照片
+  videoUrl      String?     @map("video_url") // 1个视频
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
 

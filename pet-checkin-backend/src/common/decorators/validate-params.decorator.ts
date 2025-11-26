@@ -25,13 +25,19 @@ export function ValidateParams(rules: ValidationRule[]) {
     const originalMethod = descriptor.value as (...args: unknown[]) => unknown;
 
     descriptor.value = function (...args: unknown[]) {
-      // 获取参数名称（假设按顺序传递）
+      // 获取参数名称
       const paramNames = getParamNames(originalMethod);
       const errors: ValidationError[] = [];
 
-      rules.forEach((rule, index) => {
-        const value = args[index];
-        const fieldKey = rule.field || paramNames[index];
+      rules.forEach((rule) => {
+        // 根据字段名查找对应的参数索引
+        const paramIndex = paramNames.findIndex(name => name === rule.field);
+        if (paramIndex === -1) {
+          return; // 如果找不到对应参数，跳过
+        }
+
+        const value = args[paramIndex];
+        const fieldKey = rule.field;
         const fieldName = FieldNames[fieldKey] || fieldKey;
 
         // 必填校验

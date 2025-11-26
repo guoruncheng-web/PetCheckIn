@@ -35,8 +35,16 @@ export class AuthController {
     @Body('phone') phone: string,
     @Body('password') password: string,
     @Body('nickname') nickname?: string,
+    @Body('cityCode') cityCode?: string,
+    @Body('cityName') cityName?: string,
   ) {
-    return this.authService.register(phone, password, nickname);
+    return this.authService.register(
+      phone,
+      password,
+      nickname,
+      cityCode,
+      cityName,
+    );
   }
 
   @Post('login')

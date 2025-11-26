@@ -65,6 +65,8 @@ let ProfilesService = class ProfilesService {
             nickname: profile.nickname,
             avatarUrl: profile.avatarUrl,
             bio: profile.bio,
+            gender: profile.gender,
+            birthday: profile.birthday,
             phone: profile.user.phone,
             cityCode: profile.cityCode,
             cityName: profile.cityName || profile.cityCode,
@@ -80,9 +82,13 @@ let ProfilesService = class ProfilesService {
         };
     }
     async updateProfile(userId, data) {
+        const updateData = { ...data };
+        if (data.birthday) {
+            updateData.birthday = new Date(data.birthday);
+        }
         return this.prisma.profile.update({
             where: { userId },
-            data,
+            data: updateData,
         });
     }
 };

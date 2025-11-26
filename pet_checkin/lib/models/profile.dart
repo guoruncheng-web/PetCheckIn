@@ -1,22 +1,62 @@
+/// 用户资料模型
+/// 对应数据库表: profiles
+/// 与 users 表 1:1 关系，存储用户的详细个人信息
 class Profile {
+  /// 资料 ID (UUID)
   final String id;
+
+  /// 关联的用户 ID (外键 -> users.id)
   final String userId;
+
+  /// 手机号 (来自 users 表)
   final String phone;
+
+  /// 昵称 (必填)
   final String nickname;
+
+  /// 头像 URL (阿里云 OSS 路径)
   final String? avatarUrl;
+
+  /// 个人简介
   final String? bio;
+
+  /// 性别 ('male' | 'female' | null)
   final String? gender;
+
+  /// 生日
   final DateTime? birthday;
+
+  /// 年龄 (计算字段，非数据库字段)
   final int? age;
+
+  /// 省份
   final String? province;
+
+  /// 城市代码 (对应 cities.dart 中的 code)
   final String? cityCode;
+
+  /// 城市名称
   final String? cityName;
+
+  /// 关注数 (TODO: 待实现关注功能)
   final int followingCount;
+
+  /// 粉丝数 (TODO: 待实现关注功能)
   final int followerCount;
+
+  /// 总获赞数 (所有打卡的点赞数之和)
   final int totalLikes;
+
+  /// 是否已认证 (TODO: 待实现认证功能)
   final bool isVerified;
+
+  /// 最后活跃时间 (TODO: 待实现)
   final DateTime? lastActiveAt;
+
+  /// 创建时间
   final DateTime createdAt;
+
+  /// 更新时间
   final DateTime? updatedAt;
 
   Profile({
