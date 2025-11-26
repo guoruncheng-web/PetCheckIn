@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:image_picker/image_picker.dart';
 import 'package:pet_checkin/models/profile.dart';
 import 'package:pet_checkin/models/pet.dart';
 import 'package:pet_checkin/models/badge.dart' as pet_badge;
 import 'package:pet_checkin/services/api_service.dart';
+import 'package:pet_checkin/providers/user_provider.dart';
 import 'package:pet_checkin/utils/toast.dart';
+import 'package:pet_checkin/services/location_service.dart';
+import 'package:pet_checkin/pages/auth/widgets/city_selector.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,59 +20,19 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  Profile? _profile;
   List<Pet> _pets = [];
   List<pet_badge.Badge> _badges = [];
-  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadProfile();
-  }
-
-  Future<void> _loadProfile() async {
-    try {
-      final result = await ApiService().getMyProfile();
-      if (!mounted) return;
-
-      if (result['code'] == 200 && result['data'] != null) {
-        final data = result['data'];
-        setState(() {
-          _profile = Profile(
-            id: data['id'],
-            userId: data['userId'],
-            nickname: data['nickname'],
-            avatarUrl: data['avatarUrl'],
-            bio: data['bio'],
-            phone: data['phone'],
-            cityCode: data['cityCode'],
-            cityName: data['cityName'],
-            province: data['province'],
-            isVerified: data['isVerified'] ?? false,
-            followingCount: data['followingCount'] ?? 0,
-            followerCount: data['followerCount'] ?? 0,
-            totalLikes: data['totalLikes'] ?? 0,
-            createdAt: DateTime.parse(data['createdAt']),
-            updatedAt: DateTime.parse(data['updatedAt']),
-          );
-          _loading = false;
-        });
-      } else {
-        setState(() => _loading = false);
-        Toast.error(result['message'] ?? '加载个人信息失败');
+    // 从 UserProvider 获取用户信息，如果为空则刷新
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.profile == null && !userProvider.isLoading) {
+        userProvider.fetchProfile();
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _loading = false);
-        // Token 无效或服务器错误，清除 Token 并跳转到登录页
-        await ApiService().clearToken();
-        Toast.error('登录已失效，请重新登录');
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/login');
-        }
-      }
-    }
+    });
   }
 
   Future<void> _pickAndUploadAvatar() async {
@@ -111,17 +75,27 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (image == null) return;
 
-      // TODO: 上传图片到服务器
-      // 1. 调用上传接口获取图片 URL
-      // 2. 调用更新个人信息接口
       Toast.info('正在上传头像...');
 
-      // 模拟上传
-      await Future.delayed(const Duration(seconds: 1));
+      // 1. 上传图片到服务器
+      final uploadResult = await ApiService().uploadFile(image.path, 'avatar');
 
-      // 重新加载个人信息
-      await _loadProfile();
-      Toast.success('头像上传成功');
+      if (uploadResult['code'] != 200) {
+        Toast.error(uploadResult['message'] ?? '上传失败');
+        return;
+      }
+
+      final avatarUrl = uploadResult['data']['url'];
+
+      // 2. 使用 UserProvider 更新头像
+      final userProvider = context.read<UserProvider>();
+      final success = await userProvider.updateAvatar(avatarUrl);
+
+      if (success) {
+        Toast.success('头像更新成功');
+      } else {
+        Toast.error(userProvider.error ?? '更新失败');
+      }
     } catch (e) {
       Toast.error('头像上传失败：$e');
     }
@@ -144,7 +118,11 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     if (ok != true) return;
     try {
-      // TODO: 迁移到 NestJS API - 调用 ApiService().logout()
+      // 清除 Token 和用户信息
+      await ApiService().logout();
+      final userProvider = context.read<UserProvider>();
+      await userProvider.clearProfile();
+
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     } catch (e) {
@@ -152,31 +130,122 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _changeCity() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.gps_fixed),
+              title: const Text('重新定位'),
+              onTap: () => Navigator.pop(context, 'gps'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.location_city),
+              title: const Text('手动选择'),
+              onTap: () => Navigator.pop(context, 'manual'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('取消'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (choice == null) return;
+
+    String? cityCode;
+    String? cityName;
+
+    if (choice == 'gps') {
+      Toast.info('正在定位...');
+      try {
+        final cityInfo = await LocationService.getCurrentCity();
+        if (cityInfo != null) {
+          cityCode = cityInfo['cityCode'];
+          cityName = cityInfo['cityName'];
+        } else {
+          Toast.error('定位失败，请重试或手动选择');
+          return;
+        }
+      } catch (e) {
+        Toast.error('定位失败：$e');
+        return;
+      }
+    } else {
+      final selected = await showCitySelector(context);
+      if (selected != null) {
+        cityCode = selected.code;
+        cityName = selected.name;
+      } else {
+        return;
+      }
+    }
+
+    if (cityCode == null || cityName == null) return;
+
+    try {
+      Toast.info('正在更新城市...');
+      await ApiService().updateCity(cityCode, cityName);
+
+      // 更新本地状态
+      final userProvider = context.read<UserProvider>();
+      await userProvider.fetchProfile();
+
+      Toast.success('城市已更新为：$cityName');
+    } catch (e) {
+      Toast.error('更新失败：$e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    final p = _profile;
-    if (p == null) {
-      return const Center(child: Text('未找到用户信息'));
-    }
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: SizedBox(height: MediaQuery.of(context).padding.top + 16.h),
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        // 处理 404 错误：个人信息不存在
+        if (userProvider.error == 'PROFILE_NOT_FOUND') {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            Toast.error('个人信息不存在，请重新登录');
+            await ApiService().logout();
+            await userProvider.clearProfile();
+            if (mounted) {
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+            }
+          });
+        }
+
+        if (userProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final p = userProvider.profile;
+        if (p == null) {
+          return const Center(child: Text('未找到用户信息'));
+        }
+
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: SizedBox(height: MediaQuery.of(context).padding.top + 16.h),
+              ),
+              _buildHeader(p),
+              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+              _buildAchievements(),
+              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+              _buildMyPets(),
+              SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+              _buildMenus(),
+              SliverToBoxAdapter(child: SizedBox(height: 32.h)),
+            ],
           ),
-          _buildHeader(p),
-          SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-          _buildAchievements(),
-          SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-          _buildMyPets(),
-          SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-          _buildMenus(),
-          SliverToBoxAdapter(child: SizedBox(height: 32.h)),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -265,9 +334,28 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                   SizedBox(height: 4.h),
-                  Text(
-                    p.province ?? '未知城市',
-                    style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                  GestureDetector(
+                    onTap: _changeCity,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14.w,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          p.cityName ?? p.province ?? '未设置城市',
+                          style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          Icons.edit,
+                          size: 12.w,
+                          color: Colors.grey.shade400,
+                        ),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 8.h),
                   Row(

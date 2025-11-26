@@ -137,11 +137,15 @@ class ApiService {
     String phone,
     String password, {
     String? nickname,
+    String? cityCode,
+    String? cityName,
   }) async {
     final response = await _dio.post('/auth/register', data: {
       'phone': phone,
       'password': password,
       if (nickname != null) 'nickname': nickname,
+      if (cityCode != null) 'cityCode': cityCode,
+      if (cityName != null) 'cityName': cityName,
     });
 
     // 保存 token
@@ -188,6 +192,8 @@ class ApiService {
     String? nickname,
     String? avatarUrl,
     String? bio,
+    String? gender,
+    DateTime? birthday,
     String? cityCode,
     String? cityName,
   }) async {
@@ -195,9 +201,34 @@ class ApiService {
       if (nickname != null) 'nickname': nickname,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
       if (bio != null) 'bio': bio,
+      if (gender != null) 'gender': gender,
+      if (birthday != null) 'birthday': birthday.toIso8601String(),
       if (cityCode != null) 'cityCode': cityCode,
       if (cityName != null) 'cityName': cityName,
     });
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> updateCity(String cityCode, String cityName) async {
+    final response = await _dio.put('/profiles/me/city', data: {
+      'cityCode': cityCode,
+      'cityName': cityName,
+    });
+    return response.data;
+  }
+
+  // Storage APIs
+  Future<Map<String, dynamic>> uploadFile(String filePath, String type) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath),
+    });
+
+    final response = await _dio.post(
+      '/storage/upload',
+      data: formData,
+      queryParameters: {'type': type},
+    );
+
     return response.data;
   }
 

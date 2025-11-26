@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # UI & 动画
   cupertino_icons: ^1.0.8
@@ -36,7 +38,7 @@ dependencies:
 
   # 工具
   json_annotation: ^4.9.0
-  intl: ^0.19.0                # 格式化
+  intl: ^0.20.2                # 格式化（需要与 flutter_localizations 匹配）
   uuid: ^4.5.1                   # 生成 UUID
   equatable: ^2.0.7              # 值相等辅助
   logger: ^2.5.0                 # 日志
@@ -45,8 +47,8 @@ dependencies:
   permission_handler: ^11.3.1
 
   # 地理定位（广场同城用）
-  geolocator: ^13.0.2
-  geocoding: ^2.2.2
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
 
   # UI 增强
   flutter_screenutil: ^5.9.3          # 屏幕适配

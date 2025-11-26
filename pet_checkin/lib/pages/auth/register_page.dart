@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pet_checkin/services/api_service.dart';
+import 'package:pet_checkin/pages/auth/widgets/complete_profile_dialog.dart';
 import 'package:pet_checkin/utils/toast.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -48,7 +50,20 @@ class _RegisterPageState extends State<RegisterPage> {
       }
       setState(() => _countdown = 60);
       _startCountdown();
+    } on DioException catch (e) {
+      if (!mounted) return;
+      String errorMsg = '发送失败';
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMsg = data['message'];
+        }
+      } else if (e.message != null) {
+        errorMsg = e.message!;
+      }
+      Toast.error(errorMsg);
     } catch (e) {
+      if (!mounted) return;
       Toast.error('发送失败：$e');
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -107,16 +122,47 @@ class _RegisterPageState extends State<RegisterPage> {
       }
 
       // 验证码通过后，注册账号
-      final registerResult = await ApiService().register(phone, pwd);
+      final registerResult = await ApiService().register(
+        phone,
+        pwd,
+      );
       if (!mounted) return;
 
       if (registerResult['code'] == 200) {
         Toast.success(registerResult['message'] ?? '注册成功');
+
+        // 显示完善资料弹窗
+        if (!mounted) return;
+        await showCompleteProfileDialog(context);
+
+        // 跳转到主页
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/main');
       } else {
         Toast.error(registerResult['message'] ?? '注册失败');
       }
+    } on DioException catch (e) {
+      if (!mounted) return;
+      String errorMsg = '注册失败';
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['message'] is String) {
+            errorMsg = data['message'];
+          } else if (data['message'] is List && (data['message'] as List).isNotEmpty) {
+            // 处理数组格式的错误消息
+            final firstError = (data['message'] as List)[0];
+            if (firstError is Map && firstError['errorMsg'] != null) {
+              errorMsg = firstError['errorMsg'];
+            }
+          }
+        }
+      } else if (e.message != null) {
+        errorMsg = e.message!;
+      }
+      Toast.error(errorMsg);
     } catch (e) {
+      if (!mounted) return;
       Toast.error('注册失败：$e');
     } finally {
       if (mounted) setState(() => _loading = false);

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pet_checkin/services/api_service.dart';
@@ -51,7 +52,20 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       } else {
         Toast.error(result['message'] ?? '登录失败');
       }
+    } on DioException catch (e) {
+      if (!mounted) return;
+      String errorMsg = '登录失败';
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMsg = data['message'];
+        }
+      } else if (e.message != null) {
+        errorMsg = e.message!;
+      }
+      Toast.error(errorMsg);
     } catch (e) {
+      if (!mounted) return;
       Toast.error('登录失败：$e');
     } finally {
       if (mounted) setState(() => _loading = false);
