@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:badges/badges.dart' as badges;
 import 'package:pet_checkin/models/pet.dart';
 import 'package:pet_checkin/models/checkin.dart';
 import 'package:pet_checkin/providers/user_provider.dart';
 import 'package:pet_checkin/services/api_service.dart';
-import 'package:pet_checkin/utils/toast.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -62,8 +62,105 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _checkIn() async {
-    Toast.info('功能开发中...');
+  /// 请求地理位置权限并获取位置
+  Future<void> _requestLocationAndCheckIn() async {
+    // 检查定位服务是否开启
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        _showLocationDialog(
+          '定位服务未开启',
+          '请在系统设置中开启定位服务后再试',
+        );
+      }
+      return;
+    }
+
+    // 检查定位权限
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      // 请求权限
+      permission = await Geolocator.requestPermission();
+
+      if (permission == LocationPermission.denied) {
+        if (mounted) {
+          _showLocationDialog(
+            '需要定位权限',
+            '打卡功能需要获取您的位置信息,用于显示同城动态',
+          );
+        }
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // 权限被永久拒绝,引导用户去设置
+      if (mounted) {
+        _showLocationDialog(
+          '定位权限被拒绝',
+          '请在系统设置中允许定位权限后再试',
+          showSettings: true,
+        );
+      }
+      return;
+    }
+
+    // 权限已授予,获取位置
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      if (mounted) {
+        // 跳转到打卡页面,传递位置信息
+        Navigator.pushNamed(
+          context,
+          '/checkin',
+          arguments: position,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showLocationDialog(
+          '获取位置失败',
+          '请检查定位服务是否正常: $e',
+        );
+      }
+    }
+  }
+
+  /// 显示位置权限对话框
+  void _showLocationDialog(String title, String message, {bool showSettings = false}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          if (showSettings)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                openAppSettings(); // 打开系统设置
+              },
+              child: const Text('去设置'),
+            )
+          else
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _requestLocationAndCheckIn(); // 重试
+              },
+              child: const Text('重试'),
+            ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -83,7 +180,6 @@ class _HomePageState extends State<HomePage> {
                         height: MediaQuery.of(context).padding.top + 16.h)),
                 // 用户欢迎区域
                 _buildWelcomeSection(userProvider),
-                SliverToBoxAdapter(child: SizedBox(height: 20.h)),
                 if (_pets.isNotEmpty) _buildPetCards(),
                 if (_pets.isEmpty) _buildEmptyPets(),
                 SliverToBoxAdapter(child: SizedBox(height: 24.h)),
@@ -207,30 +303,33 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             // 打卡按钮
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    size: 16.w,
-                    color: Colors.white,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '打卡',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
+            GestureDetector(
+              onTap: _requestLocationAndCheckIn,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B),
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      size: 16.w,
                       color: Colors.white,
                     ),
-                  ),
-                ],
+                    SizedBox(width: 4.w),
+                    Text(
+                      '打卡',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -240,162 +339,214 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildPetCards() {
+    // 最多展示2只宠物
+    final displayPets = _pets.take(2).toList();
+    final hasMore = _pets.length > 2;
+
     return SliverToBoxAdapter(
-      child: SizedBox(
-        height: 180.h,
-        child: PageView.builder(
-          itemCount: _pets.length,
-          onPageChanged: (i) => setState(() {}),
-          padEnds: false,
-          controller: PageController(viewportFraction: 1.0, initialPage: 0),
-          itemBuilder: (ctx, i) {
-            final pet = _pets[i];
-            return GestureDetector(
-              onTap: () async {
-                final result = await Navigator.pushNamed(context, '/pet_detail',
-                    arguments: pet);
-                if (result == true && mounted) {
-                  _loadData(); // 编辑成功后刷新数据
-                }
-              },
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 16.w),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20.r),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFFFE0B2), Color(0xFFFFCC80)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.orange.shade100,
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 0),
+        child: Transform.translate(
+          offset: Offset(0, -16.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Grid布局展示宠物
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12.w,
+                  mainAxisSpacing: 12.h,
+                  childAspectRatio: 0.85,
                 ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: 12.w,
-                      top: 12.h,
-                      child: badges.Badge(
-                        badgeStyle: badges.BadgeStyle(
-                          badgeColor: Colors.white,
-                          padding: EdgeInsets.all(4.w),
-                        ),
-                        child: ClipOval(
-                          child: pet.avatarUrl?.isNotEmpty == true
-                              ? Image.network(
-                                  pet.avatarUrl!,
-                                  width: 64.w,
-                                  height: 64.w,
-                                  fit: BoxFit.cover,
-                                )
-                              : Container(
-                                  width: 64.w,
-                                  height: 64.w,
-                                  color: Colors.orange.shade200,
-                                  child: Icon(
-                                    Icons.pets,
-                                    size: 32.w,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                        ),
+                itemCount: displayPets.length,
+                itemBuilder: (ctx, i) {
+                  final pet = displayPets[i];
+                  return _buildPetCard(pet);
+                },
+              ),
+              // 如果有更多宠物，显示"更多"按钮
+              if (hasMore) ...[
+                SizedBox(height: 12.h),
+                InkWell(
+                  onTap: () async {
+                    final result = await Navigator.pushNamed(context, '/my_pets');
+                    if (result == true && mounted) {
+                      _loadData(); // 刷新数据
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: Colors.orange.shade200,
+                        width: 1,
                       ),
                     ),
-                    Padding(
-                      padding:
-                          EdgeInsets.only(left: 20.w, bottom: 20.h, top: 24.h),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            pet.name,
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.brown.shade800,
-                            ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '查看全部 ${_pets.length} 只宠物',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: const Color(0xFFF59E0B),
+                            fontWeight: FontWeight.w500,
                           ),
-                          SizedBox(height: 4.h),
-                          if (pet.breed != null)
-                            Text(
-                              pet.breed!,
-                              style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: Colors.brown.shade600),
-                            ),
-                          SizedBox(height: 12.h),
-                          Row(
-                            children: [
-                              if (pet.gender != null) ...[
-                                Icon(
-                                    pet.gender == 'MALE'
-                                        ? Icons.male
-                                        : Icons.female,
-                                    size: 14.w,
-                                    color: pet.gender == 'MALE'
-                                        ? Colors.blueAccent
-                                        : Colors.pinkAccent),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  pet.gender == 'MALE' ? '弟弟' : '妹妹',
-                                  style: TextStyle(
-                                      fontSize: 12.sp,
-                                      color: Colors.brown.shade700),
-                                ),
-                              ],
-                              if (pet.weightKg != null) ...[
-                                if (pet.gender != null) SizedBox(width: 12.w),
-                                Icon(Icons.scale,
-                                    size: 14.w, color: Colors.orangeAccent),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  '${pet.weightKg}kg',
-                                  style: TextStyle(
-                                      fontSize: 12.sp,
-                                      color: Colors.brown.shade700),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 18.w,
+                          color: const Color(0xFFF59E0B),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建单个宠物卡片
+  Widget _buildPetCard(Pet pet) {
+    return GestureDetector(
+      onTap: () async {
+        final result =
+            await Navigator.pushNamed(context, '/pet_detail', arguments: pet);
+        if (result == true && mounted) {
+          _loadData(); // 编辑成功后刷新数据
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.r),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFFE0B2), Color(0xFFFFCC80)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.orange.shade100,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: 16.h),
+            // 头像
+            ClipOval(
+              child: pet.avatarUrl?.isNotEmpty == true
+                  ? Image.network(
+                      pet.avatarUrl!,
+                      width: 60.w,
+                      height: 60.w,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 60.w,
+                      height: 60.w,
+                      color: Colors.orange.shade200,
+                      child: Icon(
+                        Icons.pets,
+                        size: 30.w,
+                        color: Colors.white,
                       ),
                     ),
-                    Positioned(
-                      right: 16.w,
-                      bottom: 16.h,
-                      child: ElevatedButton(
-                        onPressed: _checkIn,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.orange,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.r),
-                          ),
-                          elevation: 0,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.w, vertical: 6.h),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle, size: 16.w),
-                            SizedBox(width: 4.w),
-                            Text('打卡', style: TextStyle(fontSize: 12.sp)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+            ),
+            SizedBox(height: 12.h),
+            // 名字
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              child: Text(
+                pet.name,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.brown.shade800,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            SizedBox(height: 4.h),
+            // 品种
+            if (pet.breed != null)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                child: Text(
+                  pet.breed!,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Colors.brown.shade600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
               ),
-            );
-          },
+            const Spacer(),
+            // 底部信息
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(16.r),
+                  bottomRight: Radius.circular(16.r),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (pet.gender != null) ...[
+                    Icon(
+                      pet.gender == 'MALE' ? Icons.male : Icons.female,
+                      size: 14.w,
+                      color: pet.gender == 'MALE'
+                          ? Colors.blueAccent
+                          : Colors.pinkAccent,
+                    ),
+                    SizedBox(width: 2.w),
+                  ],
+                  if (pet.age != null)
+                    Text(
+                      '${pet.age}岁',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: Colors.brown.shade700,
+                      ),
+                    ),
+                  if (pet.weightKg != null) ...[
+                    SizedBox(width: 8.w),
+                    Icon(Icons.scale, size: 14.w, color: Colors.orangeAccent),
+                    SizedBox(width: 2.w),
+                    Text(
+                      '${pet.weightKg}kg',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: Colors.brown.shade700,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

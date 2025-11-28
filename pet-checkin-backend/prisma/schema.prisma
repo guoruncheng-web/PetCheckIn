@@ -75,12 +75,15 @@ model CheckIn {
   id            String      @id @default(uuid())
   userId        String      @map("user_id")
   petId         String      @map("pet_id")
-  content       String?
-  imageUrls     String[]    @map("image_urls")
-  cityCode      String?     @map("city_code")
-  cityName      String?     @map("city_name")
-  latitude      Float?
-  longitude     Float?
+  content       String?     // 心情文案
+  imageUrls     String[]    @default([]) @map("image_urls") // 图片URLs（最多9张）
+  videoUrl      String?     @map("video_url") // 视频URL（1个，可选）
+  tags          String[]    @default([]) // 标签数组
+  address       String?     // 详细地址（如：广州市天河区天河路123号）
+  cityCode      String?     @map("city_code") // 城市代码（用于同城筛选）
+  cityName      String?     @map("city_name") // 城市名称
+  latitude      Float?      // 纬度
+  longitude     Float?      // 经度
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
 

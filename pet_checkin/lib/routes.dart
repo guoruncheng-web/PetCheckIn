@@ -11,6 +11,8 @@ import 'package:pet_checkin/pages/pet/add_pet_page.dart';
 import 'package:pet_checkin/models/pet.dart';
 import 'package:pet_checkin/pages/myPets/my_pets_page.dart';
 import 'package:pet_checkin/pages/Info/person_info.dart';
+import 'package:pet_checkin/pages/checkin/checkin_page.dart';
+import 'package:geolocator/geolocator.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -25,6 +27,7 @@ class AppRoutes {
   static const String petDetail = '/pet_detail';
   static const String myPets = '/my_pets';
   static const String myInfo = '/my_info';
+  static const String checkin = '/checkin';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -54,6 +57,9 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const MyPetsPage());
       case myInfo:
         return MaterialPageRoute(builder: (_) => const MyInfo());
+      case checkin:
+        final position = settings.arguments as Position;
+        return MaterialPageRoute(builder: (_) => CheckInPage(position: position));
       default:
         return MaterialPageRoute(builder: (_) => const SplashPage());
     }
