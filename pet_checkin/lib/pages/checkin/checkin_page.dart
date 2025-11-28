@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:pet_checkin/models/pet.dart';
+import 'package:pet_checkin/services/api_service.dart';
 
 class CheckInPage extends StatefulWidget {
   final Position position;
@@ -28,6 +30,11 @@ class _CheckInPageState extends State<CheckInPage> {
   String _locationAddress = '获取地址中...';
   bool _isLoadingAddress = true;
 
+  // 宠物相关
+  List<Pet> _pets = [];
+  Pet? _selectedPet;
+  bool _loadingPets = true;
+
   // 预设标签
   final List<String> _presetTags = [
     '开心',
@@ -46,6 +53,7 @@ class _CheckInPageState extends State<CheckInPage> {
   void initState() {
     super.initState();
     _getAddressFromPosition();
+    _loadPets();
   }
 
   @override
@@ -53,6 +61,43 @@ class _CheckInPageState extends State<CheckInPage> {
     _moodController.dispose();
     _customTagController.dispose();
     super.dispose();
+  }
+
+  /// 加载宠物列表
+  Future<void> _loadPets() async {
+    try {
+      final result = await ApiService().getMyPets();
+
+      if (mounted && result['code'] == 200) {
+        final List<dynamic> petsData = result['data'] ?? [];
+        final pets = petsData.map((json) => Pet.fromJson(json)).toList();
+
+        setState(() {
+          _pets = pets;
+          _loadingPets = false;
+          // 默认选择第一只宠物
+          if (_pets.isNotEmpty) {
+            _selectedPet = _pets.first;
+          }
+        });
+      } else {
+        if (mounted) {
+          setState(() {
+            _pets = [];
+            _loadingPets = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('获取宠物列表失败：$e');
+      if (mounted) {
+        setState(() {
+          _pets = [];
+          _loadingPets = false;
+        });
+        _showMessage('获取宠物列表失败');
+      }
+    }
   }
 
   /// 获取地址信息
@@ -233,6 +278,12 @@ class _CheckInPageState extends State<CheckInPage> {
 
   /// 提交打卡
   Future<void> _submitCheckIn() async {
+    // 验证是否选择了宠物
+    if (_selectedPet == null) {
+      _showMessage('请选择要打卡的宠物');
+      return;
+    }
+
     final mood = _moodController.text.trim();
 
     if (mood.isEmpty) {
@@ -250,7 +301,7 @@ class _CheckInPageState extends State<CheckInPage> {
     // 2. 调用打卡API
     // 3. 返回结果
 
-    _showMessage('打卡功能开发中...');
+    _showMessage('打卡功能开发中...\n宠物: ${_selectedPet!.name}');
   }
 
   void _showMessage(String message) {
@@ -283,18 +334,24 @@ class _CheckInPageState extends State<CheckInPage> {
           SizedBox(width: 8.w),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 位置信息提示
-            _buildLocationInfo(),
-            SizedBox(height: 16.h),
+      body: _loadingPets
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 宠物选择
+                  _buildPetSelector(),
+                  SizedBox(height: 16.h),
 
-            // 心情文案输入
-            _buildMoodInput(),
-            SizedBox(height: 16.h),
+                  // 位置信息提示
+                  _buildLocationInfo(),
+                  SizedBox(height: 16.h),
+
+                  // 心情文案输入
+                  _buildMoodInput(),
+                  SizedBox(height: 16.h),
 
             // 图片选择区域
             _buildImagePicker(),
@@ -309,6 +366,146 @@ class _CheckInPageState extends State<CheckInPage> {
             SizedBox(height: 100.h),
           ],
         ),
+      ),
+    );
+  }
+
+  /// 宠物选择器
+  Widget _buildPetSelector() {
+    if (_pets.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: Colors.orange.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.pets,
+              size: 24.w,
+              color: Colors.orange,
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                '您还没有宠物，请先添加宠物',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.brown.shade700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '选择宠物',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF451A03),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          SizedBox(
+            height: 100.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _pets.length,
+              itemBuilder: (context, index) {
+                final pet = _pets[index];
+                final isSelected = _selectedPet?.id == pet.id;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedPet = pet;
+                    });
+                  },
+                  child: Container(
+                    width: 80.w,
+                    margin: EdgeInsets.only(right: 12.w),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFFF59E0B).withValues(alpha: 0.1)
+                          : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFFF59E0B)
+                            : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 宠物头像
+                        ClipOval(
+                          child: pet.avatarUrl?.isNotEmpty == true
+                              ? Image.network(
+                                  pet.avatarUrl!,
+                                  width: 40.w,
+                                  height: 40.w,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 40.w,
+                                  height: 40.w,
+                                  color: isSelected
+                                      ? const Color(0xFFF59E0B)
+                                      : Colors.orange.shade200,
+                                  child: Icon(
+                                    Icons.pets,
+                                    size: 20.w,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                        SizedBox(height: 8.h),
+                        // 宠物名字
+                        Text(
+                          pet.name,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.normal,
+                            color: isSelected
+                                ? const Color(0xFFF59E0B)
+                                : Colors.grey.shade700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                        // 选中标记
+                        if (isSelected)
+                          Icon(
+                            Icons.check_circle,
+                            size: 16.w,
+                            color: const Color(0xFFF59E0B),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
