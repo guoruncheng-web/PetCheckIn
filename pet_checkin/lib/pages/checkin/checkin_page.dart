@@ -309,12 +309,97 @@ class _CheckInPageState extends State<CheckInPage> {
       return;
     }
 
-    // TODO: 实现打卡提交逻辑
-    // 1. 上传图片和视频到OSS
-    // 2. 调用打卡API
-    // 3. 返回结果
+    // 显示加载对话框
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: Container(
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                color: const Color(0xFFF59E0B),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                '正在上传...',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
 
-    _showMessage('打卡功能开发中...\n宠物: ${_selectedPet!.name}');
+    try {
+      // 1. 上传图片到OSS
+      List<String> imageUrls = [];
+      for (var image in _images) {
+        try {
+          final result = await ApiService().uploadFile(image.path, 'checkin');
+          if (result['code'] == 200 && result['data'] != null) {
+            imageUrls.add(result['data']['url']);
+          }
+        } catch (e) {
+          print('上传图片失败: $e');
+        }
+      }
+
+      // 2. 上传视频到OSS（如果有）
+      String? videoUrl;
+      if (_video != null) {
+        try {
+          final result = await ApiService().uploadFile(_video!.path, 'checkin-video');
+          if (result['code'] == 200 && result['data'] != null) {
+            videoUrl = result['data']['url'];
+          }
+        } catch (e) {
+          print('上传视频失败: $e');
+        }
+      }
+
+      // 3. 调用打卡API
+      final checkInData = {
+        'petId': _selectedPet!.id,
+        'content': mood,
+        'imageUrls': imageUrls,
+        if (videoUrl != null) 'videoUrl': videoUrl,
+        'tags': _selectedTags,
+        if (_locationAddress != '获取地址中...' && _locationAddress != '位置未知')
+          'address': _locationAddress,
+        'latitude': widget.position.latitude,
+        'longitude': widget.position.longitude,
+        // TODO: 需要从地理位置获取城市代码和名称
+      };
+
+      final result = await ApiService().createCheckIn(checkInData);
+
+      // 关闭加载对话框
+      if (mounted) Navigator.of(context).pop();
+
+      if (result['code'] == 201) {
+        _showMessage('打卡成功！');
+        // 延迟一下再返回，让用户看到成功提示
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) Navigator.of(context).pop(true); // 返回 true 表示打卡成功
+      } else {
+        _showMessage(result['message'] ?? '打卡失败');
+      }
+    } catch (e) {
+      // 关闭加载对话框
+      if (mounted) Navigator.of(context).pop();
+      _showMessage('打卡失败: $e');
+      print('打卡错误: $e');
+    }
   }
 
   void _showMessage(String message) {

@@ -290,6 +290,59 @@ class ApiService {
     return response.data;
   }
 
+  /// ==================== 打卡相关 API ====================
+
+  /// 创建打卡
+  Future<Map<String, dynamic>> createCheckIn(Map<String, dynamic> data) async {
+    final response = await post('/checkins', data: data);
+    return response.data;
+  }
+
+  /// 获取打卡列表（支持同城筛选）
+  Future<Map<String, dynamic>> getCheckIns({
+    String? cityCode,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+    };
+    if (cityCode != null) {
+      queryParams['cityCode'] = cityCode;
+    }
+
+    final response = await get('/checkins', queryParameters: queryParams);
+    return response.data;
+  }
+
+  /// 获取我的打卡列表
+  Future<Map<String, dynamic>> getMyCheckIns({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final response = await get(
+      '/checkins/me',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+      },
+    );
+    return response.data;
+  }
+
+  /// 获取打卡详情
+  Future<Map<String, dynamic>> getCheckInDetail(String id) async {
+    final response = await get('/checkins/$id');
+    return response.data;
+  }
+
+  /// 删除打卡
+  Future<Map<String, dynamic>> deleteCheckIn(String id) async {
+    final response = await delete('/checkins/$id');
+    return response.data;
+  }
+
   // 通用请求方法
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) {
     return _dio.get(path, queryParameters: queryParameters);

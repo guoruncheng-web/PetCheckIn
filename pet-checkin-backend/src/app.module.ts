@@ -10,6 +10,7 @@ import { ProfilesModule } from './modules/profiles/profiles.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { LocationModule } from './modules/location/location.module';
 import { PetsModule } from './modules/pets/pets.module';
+import { CheckInsModule } from './modules/checkins/checkins.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PetsModule } from './modules/pets/pets.module';
     StorageModule,
     LocationModule,
     PetsModule,
+    CheckInsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -22,6 +22,7 @@ const profiles_module_1 = require("./modules/profiles/profiles.module");
 const storage_module_1 = require("./modules/storage/storage.module");
 const location_module_1 = require("./modules/location/location.module");
 const pets_module_1 = require("./modules/pets/pets.module");
+const checkins_module_1 = require("./modules/checkins/checkins.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
             storage_module_1.StorageModule,
             location_module_1.LocationModule,
             pets_module_1.PetsModule,
+            checkins_module_1.CheckInsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
