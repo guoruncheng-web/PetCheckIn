@@ -654,60 +654,138 @@ class _HomePageState extends State<HomePage> {
                   orElse: () => Pet.empty());
               return Container(
                 margin: EdgeInsets.fromLTRB(24.w, 0, 24.w, 12.h),
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade200,
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    ClipOval(
-                      child: pet.avatarUrl?.isNotEmpty == true
-                          ? Image.network(
-                              pet.avatarUrl!,
-                              width: 40.w,
-                              height: 40.w,
-                              fit: BoxFit.cover,
-                            )
-                          : Container(
-                              width: 40.w,
-                              height: 40.w,
-                              color: Colors.orange.shade200,
-                              child: Icon(
-                                Icons.pets,
-                                size: 20.w,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            pet.name,
-                            style: TextStyle(
-                                fontSize: 15.sp, fontWeight: FontWeight.w500),
+                child: Dismissible(
+                  key: Key(ci.id),
+                  direction: DismissDirection.endToStart,
+                  dismissThresholds: const {
+                    DismissDirection.endToStart: 0.6, // 需要滑动60%才能触发删除
+                  },
+                  confirmDismiss: (direction) async {
+                    // 点击删除图标才弹出确认对话框
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('确认删除'),
+                        content: const Text('确定要删除这条打卡记录吗？'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('取消'),
                           ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            ci.createdAt.hourMinute,
-                            style:
-                                TextStyle(fontSize: 12.sp, color: Colors.grey),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('删除',
+                                style: TextStyle(color: Colors.red)),
                           ),
                         ],
                       ),
+                    );
+
+                    if (confirm == true) {
+                      // 调用删除接口
+                      try {
+                        await ApiService().deleteCheckIn(ci.id);
+
+                        // 显示成功提示
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('删除成功')),
+                          );
+                        }
+                        return true; // 允许删除
+                      } catch (e) {
+                        print('删除打卡记录失败: $e');
+
+                        // 显示错误提示并刷新列表
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('删除失败，请重试')),
+                          );
+                          _loadData();
+                        }
+                        return false; // 阻止删除
+                      }
+                    }
+                    return false; // 取消删除
+                  },
+                  onDismissed: (direction) {
+                    // 从列表中移除（这里只是UI更新，实际删除在confirmDismiss中完成）
+                    if (mounted) {
+                      setState(() {
+                        _todayCheckIns.removeWhere((item) => item.id == ci.id);
+                      });
+                    }
+                  },
+                  background: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(16.r),
                     ),
-                    Icon(Icons.check_circle, size: 20.w, color: Colors.green),
-                  ],
+                    alignment: Alignment.centerRight,
+                    padding: EdgeInsets.only(right: 20.w),
+                    child: Icon(
+                      Icons.delete,
+                      color: Colors.white,
+                      size: 28.w,
+                    ),
+                  ),
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade200,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        ClipOval(
+                          child: pet.avatarUrl?.isNotEmpty == true
+                              ? Image.network(
+                                  pet.avatarUrl!,
+                                  width: 40.w,
+                                  height: 40.w,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 40.w,
+                                  height: 40.w,
+                                  color: Colors.orange.shade200,
+                                  child: Icon(
+                                    Icons.pets,
+                                    size: 20.w,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pet.name,
+                                style: TextStyle(
+                                    fontSize: 15.sp, fontWeight: FontWeight.w500),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                ci.createdAt.hourMinute,
+                                style: TextStyle(
+                                    fontSize: 12.sp, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.check_circle, size: 20.w, color: Colors.green),
+                      ],
+                    ),
+                  ),
                 ),
               );
             }),
