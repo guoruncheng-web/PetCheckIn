@@ -372,17 +372,6 @@ class _AddPetPageState extends State<AddPetPage> {
               foregroundColor: const Color(0xFF451A03),
               elevation: 0,
               flexibleSpace: FlexibleSpaceBar(
-                title: Padding(
-                  padding: EdgeInsets.only(top: 40.h),
-                  child: Text(
-                    _isEditMode ? '编辑宠物' : '添加宠物',
-                    style: TextStyle(
-                      color: const Color(0xFF451A03),
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
                 background: Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
@@ -396,12 +385,15 @@ class _AddPetPageState extends State<AddPetPage> {
                     ),
                   ),
                   child: SafeArea(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(height: 60.h),
-                        // 头像
-                        GestureDetector(
+                    bottom: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(height: 20.h),
+                          // 头像
+                          GestureDetector(
                           onTap: _pickAvatar,
                           child: Hero(
                             tag: 'pet_avatar_${widget.pet?.id ?? 'new'}',
@@ -492,8 +484,20 @@ class _AddPetPageState extends State<AddPetPage> {
                               ),
                             ),
                           ),
-                        )
-                      ],
+                        ),
+                        SizedBox(height: 16.h),
+                        // 标题
+                        Text(
+                          _isEditMode ? '编辑宠物' : '添加宠物',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF451A03),
+                          ),
+                        ),
+                        SizedBox(height: 20.h),
+                        ],
+                      ),
                     ),
                   ),
                 ),

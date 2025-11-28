@@ -4,16 +4,73 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  // 主色
-  static const Color primary = Color(0xFFFB8C00);   // 橘色
-  static const Color secondary = Color(0xFF4CAF50); // 绿色
-  static const Color background = Color(0xFFF5F5F5);
-  static const Color surface = Colors.white;
-  static const Color error = Color(0xFFE53935);
+  // 主色调 - 温暖活泼的宠物主题
+  static const Color primary = Color(0xFFF59E0B);   // 主橙色
+  static const Color primaryLight = Color(0xFFFFD4A3); // 浅橙色
+  static const Color primaryDark = Color(0xFFEA580C);  // 深橙色
+  
+  static const Color secondary = Color(0xFF4CAF50); // 绿色（打卡成功）
+  static const Color accent = Color(0xFFFF9AC7);    // 粉色（可爱点缀）
+  
+  // 背景色系 - 温暖柔和
+  static const Color background = Color(0xFFFFFBF5);      // 奶白色背景
+  static const Color backgroundLight = Color(0xFFFFFFF8); // 更浅的背景
+  static const Color surface = Colors.white;              // 卡片表面
+  static const Color surfaceVariant = Color(0xFFFFF8ED);  // 变体表面
+  
+  // 功能色
+  static const Color error = Color(0xFFFF5252);
+  static const Color success = Color(0xFF4CAF50);
+  static const Color warning = Color(0xFFFFA726);
+  static const Color info = Color(0xFF64B5F6);
 
-  // 文字
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
+  // 文字颜色
+  static const Color textPrimary = Color(0xFF1F1F1F);
+  static const Color textSecondary = Color(0xFF78350F);
+  static const Color textTertiary = Color(0xFF9E9E9E);
+  static const Color textLight = Color(0xFFBDBDBD);
+  
+  // 渐变色组 - 用于卡片装饰
+  static const List<Color> gradientWarmOrange = [
+    Color(0xFFFFE5B4),
+    Color(0xFFFFD4A3),
+    Color(0xFFFFE8CC),
+  ];
+  
+  static const List<Color> gradientPink = [
+    Color(0xFFFCE4EC),
+    Color(0xFFF8BBD0),
+  ];
+  
+  static const List<Color> gradientBlue = [
+    Color(0xFFE3F2FD),
+    Color(0xFFBBDEFB),
+  ];
+  
+  static const List<Color> gradientPurple = [
+    Color(0xFFF3E5F5),
+    Color(0xFFE1BEE7),
+  ];
+  
+  static const List<Color> gradientGreen = [
+    Color(0xFFE8F5E9),
+    Color(0xFFC8E6C9),
+  ];
+  
+  static const List<Color> gradientYellow = [
+    Color(0xFFFFF9C4),
+    Color(0xFFFFF59D),
+  ];
+  
+  // 宠物卡片渐变色集合
+  static const List<List<Color>> petCardGradients = [
+    [Color(0xFFFFF4E6), Color(0xFFFFE8CC)], // 温暖橙
+    [Color(0xFFFCE4EC), Color(0xFFF8BBD0)], // 粉红色
+    [Color(0xFFE3F2FD), Color(0xFFBBDEFB)], // 天蓝色
+    [Color(0xFFF3E5F5), Color(0xFFE1BEE7)], // 淡紫色
+    [Color(0xFFE8F5E9), Color(0xFFC8E6C9)], // 薄荷绿
+    [Color(0xFFFFF9C4), Color(0xFFFFF59D)], // 柠檬黄
+  ];
 
   // 圆角
   static const double radiusSmall = 8;
@@ -75,6 +132,9 @@ class AppTheme {
           onSurface: textPrimary,
         ),
         scaffoldBackgroundColor: background,
+        canvasColor: background,
+        dialogBackgroundColor: surface,
+        dividerColor: Color(0xFFFFE8CC).withValues(alpha: 0.3),
         appBarTheme: const AppBarTheme(
           elevation: 0,
           backgroundColor: surface,

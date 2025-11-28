@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:provider/provider.dart';
 import 'package:pet_checkin/models/checkin.dart';
+import 'package:pet_checkin/providers/user_provider.dart';
+import 'package:pet_checkin/services/api_service.dart';
 import 'package:pet_checkin/utils/toast.dart';
 
 class SquarePage extends StatefulWidget {
@@ -16,26 +19,68 @@ class _SquarePageState extends State<SquarePage> {
   final RefreshController _refreshController = RefreshController();
   final List<CheckIn> _checkIns = [];
   bool _loading = true;
+  String? _selectedCity;
 
   @override
   void initState() {
     super.initState();
+    _initCity();
     _loadCheckIns();
   }
 
+  void _initCity() {
+    final userProvider = context.read<UserProvider>();
+    if (userProvider.profile?.cityName != null) {
+      _selectedCity = userProvider.profile!.cityName;
+    } else {
+      _selectedCity = '全部';
+    }
+  }
+
   Future<void> _loadCheckIns({bool refresh = false}) async {
+    if (!refresh) {
+      setState(() => _loading = true);
+    }
+
     try {
-      // TODO: 迁移到 NestJS API
-      if (mounted) {
+      // 调用 API 获取打卡记录，传入城市参数
+      final result = await ApiService().getSquareCheckIns(
+        city: _selectedCity == '全部' ? null : _selectedCity,
+        page: 1,
+        limit: 20,
+      );
+
+      if (mounted && result['code'] == 200) {
+        final List<dynamic> checkInsData = result['data'] ?? [];
         setState(() {
+          _checkIns.clear();
+          _checkIns.addAll(
+            checkInsData.map((json) => CheckIn.fromJson(json)).toList(),
+          );
           _loading = false;
         });
         if (refresh) _refreshController.refreshCompleted();
+      } else {
+        if (mounted) {
+          setState(() {
+            _checkIns.clear();
+            _loading = false;
+          });
+          if (refresh) _refreshController.refreshCompleted();
+        }
       }
     } catch (e) {
+      debugPrint('加载打卡记录失败：$e');
       Toast.error('加载失败：$e');
-      if (refresh) _refreshController.refreshFailed();
-      if (mounted) setState(() => _loading = false);
+      if (refresh) {
+        _refreshController.refreshFailed();
+      }
+      if (mounted) {
+        setState(() {
+          _checkIns.clear();
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -122,9 +167,13 @@ class _SquarePageState extends State<SquarePage> {
         foregroundColor: Colors.black87,
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.location_on_outlined),
             onSelected: (v) {
-              _loadCheckIns();
+              if (_selectedCity != v) {
+                setState(() {
+                  _selectedCity = v;
+                });
+                _loadCheckIns(); // 切换城市后重新加载数据
+              }
             },
             itemBuilder: (_) => [
               const PopupMenuItem(value: '全部', child: Text('全部城市')),
@@ -133,6 +182,34 @@ class _SquarePageState extends State<SquarePage> {
               const PopupMenuItem(value: '广州', child: Text('广州')),
               const PopupMenuItem(value: '深圳', child: Text('深圳')),
             ],
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 20.w,
+                    color: const Color(0xFFF59E0B),
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    _selectedCity ?? '全部',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF333333),
+                    ),
+                  ),
+                  SizedBox(width: 2.w),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: 20.w,
+                    color: const Color(0xFF999999),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
