@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:pet_checkin/models/pet.dart';
 import 'package:pet_checkin/services/api_service.dart';
+import 'package:video_player/video_player.dart';
 
 class CheckInPage extends StatefulWidget {
   final Position position;
@@ -26,6 +27,7 @@ class _CheckInPageState extends State<CheckInPage> {
 
   List<XFile> _images = [];
   XFile? _video;
+  VideoPlayerController? _videoController;
   List<String> _selectedTags = [];
   String _locationAddress = '获取地址中...';
   bool _isLoadingAddress = true;
@@ -60,6 +62,7 @@ class _CheckInPageState extends State<CheckInPage> {
   void dispose() {
     _moodController.dispose();
     _customTagController.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -176,10 +179,10 @@ class _CheckInPageState extends State<CheckInPage> {
       print('获取地址失败: $e');
       print('堆栈: $stackTrace');
 
-      // 降级方案：显示经纬度
+      // 降级方案：显示"位置未知"而不是经纬度
       if (mounted) {
         setState(() {
-          _locationAddress = '${widget.position.latitude.toStringAsFixed(4)}, ${widget.position.longitude.toStringAsFixed(4)}';
+          _locationAddress = '位置未知';
           _isLoadingAddress = false;
         });
       }
@@ -229,8 +232,16 @@ class _CheckInPageState extends State<CheckInPage> {
       );
 
       if (video != null) {
+        // 释放旧的视频控制器
+        await _videoController?.dispose();
+
+        // 创建新的视频控制器
+        final controller = VideoPlayerController.file(File(video.path));
+        await controller.initialize();
+
         setState(() {
           _video = video;
+          _videoController = controller;
         });
       }
     } catch (e) {
@@ -240,8 +251,10 @@ class _CheckInPageState extends State<CheckInPage> {
 
   /// 删除视频
   void _removeVideo() {
+    _videoController?.dispose();
     setState(() {
       _video = null;
+      _videoController = null;
     });
   }
 
@@ -308,6 +321,33 @@ class _CheckInPageState extends State<CheckInPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  /// 预览图片
+  void _previewImage(int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => _ImagePreviewPage(
+          images: _images,
+          initialIndex: index,
+        ),
+      ),
+    );
+  }
+
+  /// 预览视频
+  void _previewVideo() {
+    if (_video != null && _videoController != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => _VideoPreviewPage(
+            videoPath: _video!.path,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -674,13 +714,16 @@ class _CheckInPageState extends State<CheckInPage> {
               // 图片预览
               return Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8.r),
-                    child: Image.file(
-                      File(_images[index].path),
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
+                  GestureDetector(
+                    onTap: () => _previewImage(index),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: Image.file(
+                        File(_images[index].path),
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -769,51 +812,80 @@ class _CheckInPageState extends State<CheckInPage> {
           else
             Stack(
               children: [
-                Container(
-                  height: 100.h,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                GestureDetector(
+                  onTap: _previewVideo,
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.play_circle_outline,
-                          size: 32.w,
-                          color: const Color(0xFFF59E0B),
-                        ),
-                        SizedBox(width: 8.w),
-                        Flexible(
-                          child: Text(
-                            _video!.name,
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.grey.shade700,
+                    child: SizedBox(
+                      height: 200.h,
+                      width: double.infinity,
+                      child: _videoController != null && _videoController!.value.isInitialized
+                          ? Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                // 视频第一帧作为缩略图
+                                VideoPlayer(_videoController!),
+                                // 半透明遮罩
+                                Container(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                ),
+                                // 播放图标居中
+                                Center(
+                                  child: Icon(
+                                    Icons.play_circle_filled,
+                                    size: 48.w,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Container(
+                              color: Colors.grey.shade200,
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.videocam,
+                                      size: 32.w,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                      child: Text(
+                                        _video!.name,
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
+                // 删除按钮
                 Positioned(
-                  top: 4.w,
-                  right: 4.w,
+                  top: 8.w,
+                  right: 8.w,
                   child: GestureDetector(
                     onTap: _removeVideo,
                     child: Container(
-                      padding: EdgeInsets.all(4.w),
+                      padding: EdgeInsets.all(6.w),
                       decoration: const BoxDecoration(
                         color: Colors.black54,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.close,
-                        size: 16.w,
+                        size: 18.w,
                         color: Colors.white,
                       ),
                     ),
@@ -964,6 +1036,153 @@ class _CheckInPageState extends State<CheckInPage> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// 图片预览页面
+class _ImagePreviewPage extends StatefulWidget {
+  final List<XFile> images;
+  final int initialIndex;
+
+  const _ImagePreviewPage({
+    required this.images,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_ImagePreviewPage> createState() => _ImagePreviewPageState();
+}
+
+class _ImagePreviewPageState extends State<_ImagePreviewPage> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text('${_currentIndex + 1}/${widget.images.length}'),
+        elevation: 0,
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.images.length,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        itemBuilder: (context, index) {
+          return InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 4.0,
+            child: Center(
+              child: Image.file(
+                File(widget.images[index].path),
+                fit: BoxFit.contain,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// 视频预览页面
+class _VideoPreviewPage extends StatefulWidget {
+  final String videoPath;
+
+  const _VideoPreviewPage({
+    required this.videoPath,
+  });
+
+  @override
+  State<_VideoPreviewPage> createState() => _VideoPreviewPageState();
+}
+
+class _VideoPreviewPageState extends State<_VideoPreviewPage> {
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.file(File(widget.videoPath));
+    _controller.initialize().then((_) {
+      setState(() {
+        _isInitialized = true;
+      });
+      _controller.play();
+    });
+    _controller.setLooping(true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text('视频预览'),
+        elevation: 0,
+      ),
+      body: Center(
+        child: _isInitialized
+            ? GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (_controller.value.isPlaying) {
+                      _controller.pause();
+                    } else {
+                      _controller.play();
+                    }
+                  });
+                },
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: _controller.value.aspectRatio,
+                      child: VideoPlayer(_controller),
+                    ),
+                    if (!_controller.value.isPlaying)
+                      Icon(
+                        Icons.play_circle_filled,
+                        size: 64.w,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                  ],
+                ),
+              )
+            : const CircularProgressIndicator(
+                color: Colors.white,
+              ),
       ),
     );
   }
