@@ -25,7 +25,7 @@ export class CheckInsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Req() req, @Body() dto: CreateCheckInDto) {
-    const checkIn = await this.checkInsService.create(req.user.id, dto);
+    const checkIn = await this.checkInsService.create(req.user.userId, dto);
     return {
       code: 201,
       message: '打卡成功',
@@ -59,7 +59,7 @@ export class CheckInsController {
     @Query('limit') limit?: number,
   ) {
     const result = await this.checkInsService.findMyCheckIns(
-      req.user.id,
+      req.user.userId,
       page,
       limit,
     );
@@ -91,7 +91,7 @@ export class CheckInsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async remove(@Param('id') id: string, @Req() req) {
-    const result = await this.checkInsService.remove(id, req.user.id);
+    const result = await this.checkInsService.remove(id, req.user.userId);
     return {
       code: 200,
       ...result,

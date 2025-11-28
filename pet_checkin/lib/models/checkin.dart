@@ -54,16 +54,16 @@ class CheckIn {
 
   factory CheckIn.fromJson(Map<String, dynamic> json) => CheckIn(
         id: json['id'] as String,
-        petId: json['pet_id'] as String,
-        userId: json['user_id'] as String,
-        imageUrls: (json['image_urls'] as List<dynamic>?)?.cast<String>() ?? [],
-        city: json['city'] as String?,
-        createdAt: DateTime.parse(json['created_at'] as String),
+        petId: json['petId'] as String,
+        userId: json['userId'] as String,
+        imageUrls: (json['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [],
+        city: json['cityName'] as String?,
+        createdAt: DateTime.parse(json['createdAt'] as String),
         petName: json['pet'] == null ? '' : json['pet']['name'] as String,
-        petAvatarUrl: json['pet'] == null ? '' : json['pet']['avatar_url'] as String,
-        likeCount: json['like_count'] as int? ?? 0,
-        commentCount: json['comment_count'] as int? ?? 0,
-        isLiked: json['is_liked'] as bool? ?? false,
+        petAvatarUrl: json['pet'] == null ? '' : json['pet']['avatarUrl'] as String,
+        likeCount: json['_count'] == null ? 0 : json['_count']['likes'] as int? ?? 0,
+        commentCount: json['_count'] == null ? 0 : json['_count']['comments'] as int? ?? 0,
+        isLiked: json['isLiked'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {

@@ -41,13 +41,11 @@ class _HomePageState extends State<HomePage> {
         final List<dynamic> petsData = result['data'] ?? [];
         setState(() {
           _pets = petsData.map((json) => Pet.fromJson(json)).toList();
-          _loading = false;
         });
       } else {
         if (mounted) {
           setState(() {
             _pets = [];
-            _loading = false;
           });
         }
       }
@@ -56,6 +54,42 @@ class _HomePageState extends State<HomePage> {
       if (mounted) {
         setState(() {
           _pets = [];
+        });
+      }
+    }
+
+    // 获取今日打卡列表
+    try {
+      final result = await ApiService().getMyCheckIns(page: 1, limit: 20);
+
+      if (mounted && result['code'] == 200) {
+        final List<dynamic> checkInsData = result['data'] ?? [];
+        final allCheckIns = checkInsData.map((json) => CheckIn.fromJson(json)).toList();
+
+        // 过滤出今天的打卡记录
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final tomorrow = today.add(const Duration(days: 1));
+
+        setState(() {
+          _todayCheckIns = allCheckIns.where((ci) {
+            return ci.createdAt.isAfter(today) && ci.createdAt.isBefore(tomorrow);
+          }).toList();
+          _loading = false;
+        });
+      } else {
+        if (mounted) {
+          setState(() {
+            _todayCheckIns = [];
+            _loading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('获取今日打卡失败：$e');
+      if (mounted) {
+        setState(() {
+          _todayCheckIns = [];
           _loading = false;
         });
       }
@@ -114,11 +148,16 @@ class _HomePageState extends State<HomePage> {
 
       if (mounted) {
         // 跳转到打卡页面,传递位置信息
-        Navigator.pushNamed(
+        final result = await Navigator.pushNamed(
           context,
           '/checkin',
           arguments: position,
         );
+
+        // 如果打卡成功,刷新首页数据
+        if (result == true && mounted) {
+          _loadData();
+        }
       }
     } catch (e) {
       if (mounted) {

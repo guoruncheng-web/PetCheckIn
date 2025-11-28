@@ -108,9 +108,16 @@ class _CheckInPageState extends State<CheckInPage> {
     try {
       print('开始获取地址信息: ${widget.position.latitude}, ${widget.position.longitude}');
 
+      // 设置超时时间，避免长时间等待
       List<Placemark> placemarks = await placemarkFromCoordinates(
         widget.position.latitude,
         widget.position.longitude,
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          print('geocoding 超时，使用坐标显示');
+          return [];
+        },
       );
 
       print('获取到的地址数量: ${placemarks.length}');
@@ -167,10 +174,11 @@ class _CheckInPageState extends State<CheckInPage> {
           });
         }
       } else {
-        print('未获取到地址信息');
+        print('未获取到地址信息，使用坐标显示');
         if (mounted) {
           setState(() {
-            _locationAddress = '位置未知';
+            // 降级方案：显示经纬度坐标
+            _locationAddress = '${widget.position.latitude.toStringAsFixed(6)}, ${widget.position.longitude.toStringAsFixed(6)}';
             _isLoadingAddress = false;
           });
         }
@@ -179,10 +187,10 @@ class _CheckInPageState extends State<CheckInPage> {
       print('获取地址失败: $e');
       print('堆栈: $stackTrace');
 
-      // 降级方案：显示"位置未知"而不是经纬度
+      // 降级方案：显示经纬度坐标而不是"位置未知"
       if (mounted) {
         setState(() {
-          _locationAddress = '位置未知';
+          _locationAddress = '${widget.position.latitude.toStringAsFixed(6)}, ${widget.position.longitude.toStringAsFixed(6)}';
           _isLoadingAddress = false;
         });
       }
